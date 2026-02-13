@@ -257,6 +257,7 @@ export function DrawingCanvas({ readonly = false }: DrawingCanvasProps) {
 							strokeLinecap="round"
 							strokeLinejoin="round"
 						>
+							<title>Отменить</title>
 							<path d="M3 7v6h6" />
 							<path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6.69 3L3 13" />
 						</svg>
@@ -273,6 +274,7 @@ export function DrawingCanvas({ readonly = false }: DrawingCanvasProps) {
 							strokeLinecap="round"
 							strokeLinejoin="round"
 						>
+							<title>Очистить</title>
 							<path d="M3 6h18" />
 							<path d="M8 6V4h8v2" />
 							<path d="M5 6v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V6" />
