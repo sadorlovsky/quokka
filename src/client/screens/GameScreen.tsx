@@ -3,6 +3,7 @@ import type { PlayerInfo } from "@/shared/types/room";
 import { PlayerChip } from "../components/PlayerChip";
 import { useConnection } from "../contexts/ConnectionContext";
 import { CrocodileGame } from "../games/crocodile/CrocodileGame";
+import { HangmanGame } from "../games/hangman/HangmanGame";
 import { TapewormGame } from "../games/tapeworm/TapewormGame";
 import { WordGuessGame } from "../games/word-guess/WordGuessGame";
 import "./GameScreen.css";
@@ -92,6 +93,8 @@ export function GameScreen() {
 				<TapewormGame />
 			) : room.settings.gameId === "crocodile" ? (
 				<CrocodileGame />
+			) : room.settings.gameId === "hangman" ? (
+				<HangmanGame />
 			) : (
 				<p className="status-text">Неизвестная игра: {room.settings.gameId}</p>
 			)}

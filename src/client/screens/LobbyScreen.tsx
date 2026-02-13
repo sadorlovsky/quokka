@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { getRecommendedSettings } from "@/shared/game-settings";
 import { GAME_META } from "@/shared/games";
 import { DEFAULT_CROCODILE_CONFIG } from "@/shared/types/crocodile";
+import { DEFAULT_HANGMAN_CONFIG } from "@/shared/types/hangman";
 import type { RoomSettings } from "@/shared/types/room";
 import { DEFAULT_TAPEWORM_CONFIG } from "@/shared/types/tapeworm";
 import type { WordGuessConfig } from "@/shared/types/word-guess";
@@ -44,24 +45,26 @@ export function LobbyScreen() {
 	const isHost = room.hostId === playerId;
 	const allConnected = room.players.every((p) => p.isConnected);
 	const canStart = isHost && room.players.length >= 2 && allConnected;
-	const isTapeworm = room.settings.gameId === "tapeworm";
-	const isCrocodile = room.settings.gameId === "crocodile";
-	const isWordGuess = !isTapeworm && !isCrocodile;
+	const { gameId } = room.settings;
 
-	const config = isTapeworm
-		? { ...DEFAULT_TAPEWORM_CONFIG, ...room.settings.gameConfig }
-		: isCrocodile
-			? { ...DEFAULT_CROCODILE_CONFIG, ...room.settings.gameConfig }
-			: ({
-					...DEFAULT_WORD_GUESS_CONFIG,
-					...room.settings.gameConfig,
-				} as WordGuessConfig);
+	const DEFAULT_CONFIGS: Record<string, Record<string, unknown>> = {
+		tapeworm: DEFAULT_TAPEWORM_CONFIG,
+		crocodile: DEFAULT_CROCODILE_CONFIG,
+		hangman: DEFAULT_HANGMAN_CONFIG,
+		"word-guess": DEFAULT_WORD_GUESS_CONFIG,
+	};
+	const config = {
+		...(DEFAULT_CONFIGS[gameId] ?? DEFAULT_WORD_GUESS_CONFIG),
+		...room.settings.gameConfig,
+	};
 
-	const isTeamsMode = isWordGuess && (config as WordGuessConfig).mode === "teams";
+	const isTeamsMode = gameId === "word-guess" && (config as WordGuessConfig).mode === "teams";
 
 	// Check teams validity for start (word-guess only)
 	const teams = (
-		!isTapeworm ? ((config as WordGuessConfig).teams ?? { a: [], b: [] }) : { a: [], b: [] }
+		gameId !== "tapeworm"
+			? ((config as WordGuessConfig).teams ?? { a: [], b: [] })
+			: { a: [], b: [] }
 	) as Record<string, string[]>;
 	const teamsValid = !isTeamsMode || Object.values(teams).every((members) => members.length >= 2);
 	const canStartFinal = canStart && (!isTeamsMode || teamsValid);
@@ -84,7 +87,7 @@ export function LobbyScreen() {
 	};
 
 	const handleSettingsChange = (settings: Partial<RoomSettings>) => {
-		if (isTapeworm || isCrocodile) {
+		if (gameId !== "word-guess") {
 			send({ type: "updateSettings", settings });
 			return;
 		}
@@ -112,7 +115,7 @@ export function LobbyScreen() {
 		});
 	};
 
-	const rosterMode = isWordGuess ? (config as WordGuessConfig).mode : "ffa";
+	const rosterMode = gameId === "word-guess" ? (config as WordGuessConfig).mode : "ffa";
 
 	return (
 		<div className="screen">

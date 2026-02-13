@@ -85,6 +85,8 @@ function sanitizeGameConfig(
 			const d = config.difficulty;
 			sanitized.difficulty = d === 1 || d === 2 || d === 3 ? d : "all";
 		}
+	} else if (gameId === "hangman") {
+		// No config options — rounds are auto-calculated from player count
 	} else {
 		// Unknown game — pass through as-is (plugin will merge with defaults)
 		return config;

@@ -3,6 +3,7 @@ import "./GameSettings.css";
 import { getRecommendedSettings } from "@/shared/game-settings";
 import type { CrocodileConfig } from "@/shared/types/crocodile";
 import { DEFAULT_CROCODILE_CONFIG } from "@/shared/types/crocodile";
+
 import type { RoomSettings } from "@/shared/types/room";
 import type { WordGuessConfig } from "@/shared/types/word-guess";
 import { DEFAULT_WORD_GUESS_CONFIG } from "@/shared/types/word-guess";
@@ -253,6 +254,29 @@ function CrocodileSettings({
 	);
 }
 
+function HangmanSettings({
+	playerCount,
+	children,
+}: {
+	isHost: boolean;
+	playerCount: number;
+	onUpdate: (settings: Partial<RoomSettings>) => void;
+	gameConfig: Record<string, unknown> | undefined;
+	children?: ReactNode;
+}) {
+	const totalRounds = 2 * playerCount;
+
+	return (
+		<div className="game-settings">
+			<p className="settings-summary">
+				{plural(totalRounds, "раунд", "раунда", "раундов")} · каждый игрок будет палачом дважды
+			</p>
+			<p className="settings-summary">Палач загадывает слово, остальные угадывают по очереди</p>
+			{children}
+		</div>
+	);
+}
+
 export function GameSettings({
 	settings,
 	isHost,
@@ -274,6 +298,19 @@ export function GameSettings({
 			>
 				{children}
 			</CrocodileSettings>
+		);
+	}
+
+	if (settings.gameId === "hangman") {
+		return (
+			<HangmanSettings
+				isHost={isHost}
+				playerCount={playerCount}
+				onUpdate={onUpdate}
+				gameConfig={settings.gameConfig}
+			>
+				{children}
+			</HangmanSettings>
 		);
 	}
 
