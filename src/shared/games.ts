@@ -3,6 +3,7 @@ export const GAME_META: Record<string, { emoji: string; name: string; comingSoon
 	tapeworm: { emoji: "🪱", name: "Червяк" },
 	crocodile: { emoji: "🐊", name: "Крокодил" },
 	hangman: { emoji: "💀", name: "Виселица" },
+	perudo: { emoji: "🎲", name: "Перудо" },
 	mafia: { emoji: "🔫", name: "Мафия", comingSoon: true },
 	trivia: { emoji: "❓", name: "Викторина", comingSoon: true },
 	codenames: { emoji: "🕵️", name: "Codenames", comingSoon: true },

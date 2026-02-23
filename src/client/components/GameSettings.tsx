@@ -3,6 +3,8 @@ import "./GameSettings.css";
 import { getRecommendedSettings } from "@/shared/game-settings";
 import type { CrocodileConfig } from "@/shared/types/crocodile";
 import { DEFAULT_CROCODILE_CONFIG } from "@/shared/types/crocodile";
+import type { PerudoConfig } from "@/shared/types/perudo";
+import { DEFAULT_PERUDO_CONFIG } from "@/shared/types/perudo";
 
 import type { RoomSettings } from "@/shared/types/room";
 import type { WordGuessConfig } from "@/shared/types/word-guess";
@@ -292,6 +294,102 @@ function CrocodileSettings({
 	);
 }
 
+function PerudoSettings({
+	isHost,
+	onUpdate,
+	gameConfig,
+	children,
+}: {
+	isHost: boolean;
+	playerCount: number;
+	onUpdate: (settings: Partial<RoomSettings>) => void;
+	gameConfig: Record<string, unknown> | undefined;
+	children?: ReactNode;
+}) {
+	const config = {
+		...DEFAULT_PERUDO_CONFIG,
+		...gameConfig,
+	} as PerudoConfig;
+
+	const updateConfig = useCallback(
+		(patch: Partial<PerudoConfig>) => {
+			onUpdate({
+				gameConfig: { ...config, ...patch },
+			});
+		},
+		[onUpdate, config],
+	);
+
+	const timeLabel =
+		config.turnTimeSeconds === 30
+			? "30 сек"
+			: config.turnTimeSeconds === 60
+				? "1 мин"
+				: config.turnTimeSeconds === 90
+					? "1.5 мин"
+					: `${config.turnTimeSeconds} сек`;
+
+	if (!isHost) {
+		return (
+			<div className="game-settings">
+				<p className="settings-summary">
+					2–6 игроков · {timeLabel} на ход
+					{config.palifico ? " · Палифико" : ""}
+				</p>
+				<p className="settings-summary">Игра на блеф с кубиками</p>
+				{children}
+			</div>
+		);
+	}
+
+	return (
+		<div className="game-settings">
+			<h3 className="settings-title">Настройки игры</h3>
+
+			<div className="settings-group">
+				<span className="settings-label">Палифико</span>
+				<div className="settings-options">
+					<button
+						className={`settings-option${config.palifico ? " settings-option--active" : ""}`}
+						onClick={() => updateConfig({ palifico: true })}
+					>
+						Включено
+					</button>
+					<button
+						className={`settings-option${!config.palifico ? " settings-option--active" : ""}`}
+						onClick={() => updateConfig({ palifico: false })}
+					>
+						Выключено
+					</button>
+				</div>
+			</div>
+
+			<div className="settings-group">
+				<span className="settings-label">Время на ход</span>
+				<div className="settings-options">
+					{[
+						{ value: 30, label: "30 сек" },
+						{ value: 60, label: "1 мин" },
+						{ value: 90, label: "1.5 мин" },
+					].map(({ value, label }) => (
+						<button
+							key={value}
+							className={`settings-option${config.turnTimeSeconds === value ? " settings-option--active" : ""}`}
+							onClick={() => updateConfig({ turnTimeSeconds: value })}
+						>
+							{label}
+						</button>
+					))}
+				</div>
+			</div>
+
+			<p className="settings-summary">Игра на блеф с кубиками</p>
+
+			{children}
+		</div>
+	);
+}
+
 function HangmanSettings({
 	playerCount,
 	children,
@@ -336,6 +434,19 @@ export function GameSettings({
 			>
 				{children}
 			</CrocodileSettings>
+		);
+	}
+
+	if (settings.gameId === "perudo") {
+		return (
+			<PerudoSettings
+				isHost={isHost}
+				playerCount={playerCount}
+				onUpdate={onUpdate}
+				gameConfig={settings.gameConfig}
+			>
+				{children}
+			</PerudoSettings>
 		);
 	}
 

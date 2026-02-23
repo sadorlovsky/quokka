@@ -3,6 +3,7 @@ import { getRecommendedSettings } from "@/shared/game-settings";
 import { GAME_META } from "@/shared/games";
 import { DEFAULT_CROCODILE_CONFIG } from "@/shared/types/crocodile";
 import { DEFAULT_HANGMAN_CONFIG } from "@/shared/types/hangman";
+import { DEFAULT_PERUDO_CONFIG } from "@/shared/types/perudo";
 import type { RoomSettings } from "@/shared/types/room";
 import { DEFAULT_TAPEWORM_CONFIG } from "@/shared/types/tapeworm";
 import type { WordGuessConfig } from "@/shared/types/word-guess";
@@ -51,6 +52,7 @@ export function LobbyScreen() {
 		tapeworm: DEFAULT_TAPEWORM_CONFIG,
 		crocodile: DEFAULT_CROCODILE_CONFIG,
 		hangman: DEFAULT_HANGMAN_CONFIG,
+		perudo: DEFAULT_PERUDO_CONFIG,
 		"word-guess": DEFAULT_WORD_GUESS_CONFIG,
 	};
 	const config = {

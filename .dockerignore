@@ -4,4 +4,8 @@ data
 .git
 .github
 .claude
+e2e
 *.md
+biome.json
+bunfig.toml
+.env*
