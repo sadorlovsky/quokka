@@ -10,10 +10,12 @@ import {
 	DEFAULT_HANGMAN_CONFIG,
 	HANGMAN_MAX_ERRORS,
 	HANGMAN_TURN_TIMER_MS,
+	HANGMAN_WORD_PICK_TIMER_MS,
 } from "@/shared/types/hangman";
 import type { PlayerInfo } from "@/shared/types/room";
 
 const WORD_REGEX = /^[а-яё]{3,15}$/i;
+const FALLBACK_WORDS = ["кот", "дом", "лес", "мост", "чай", "хлеб", "стол", "луна", "берег", "сад"];
 
 // --- Helpers ---
 
@@ -39,6 +41,10 @@ function isWordFullyGuessed(word: string, guessedLetters: string[]): boolean {
 
 function countOccurrences(word: string, letter: string): number {
 	return word.split("").filter((ch) => ch.toLowerCase() === letter).length;
+}
+
+function getFallbackWord(): string {
+	return FALLBACK_WORDS[Math.floor(Math.random() * FALLBACK_WORDS.length)]!;
 }
 
 function buildGuesserOrder(players: { id: string }[], executionerId: string): string[] {
@@ -263,6 +269,15 @@ export const hangmanPlugin: GamePlugin<HangmanState, HangmanAction, HangmanConfi
 				}
 				return null;
 			}
+			case "wordPickTimeout": {
+				if (playerId !== "__server__") {
+					return "Only server can timeout";
+				}
+				if (state.phase !== "pickingWord") {
+					return "Not in word picking phase";
+				}
+				return null;
+			}
 			case "nextRound": {
 				if (playerId !== "__server__") {
 					return "Only server can advance round";
@@ -283,12 +298,23 @@ export const hangmanPlugin: GamePlugin<HangmanState, HangmanAction, HangmanConfi
 				return {
 					...state,
 					phase: "pickingWord",
-					timerEndsAt: 0,
+					timerEndsAt: Date.now() + HANGMAN_WORD_PICK_TIMER_MS,
 				};
 			}
 
 			case "submitWord": {
 				const word = action.word.toLowerCase();
+				return {
+					...state,
+					phase: "guessing",
+					currentWord: word,
+					currentGuesserIndex: 0,
+					timerEndsAt: Date.now() + HANGMAN_TURN_TIMER_MS,
+				};
+			}
+
+			case "wordPickTimeout": {
+				const word = getFallbackWord();
 				return {
 					...state,
 					phase: "guessing",
@@ -488,6 +514,16 @@ export const hangmanPlugin: GamePlugin<HangmanState, HangmanAction, HangmanConfi
 					key: `turn-${state.currentRound}-${state.currentGuesserIndex}-${state.guessedLetters.length}`,
 					durationMs: delay,
 					action: { type: "turnTimeout" },
+				};
+			}
+		}
+		if (state.phase === "pickingWord") {
+			const delay = state.timerEndsAt - Date.now();
+			if (delay > 0) {
+				return {
+					key: `pick-${state.currentRound}-${state.currentExecutionerId}`,
+					durationMs: delay,
+					action: { type: "wordPickTimeout" },
 				};
 			}
 		}

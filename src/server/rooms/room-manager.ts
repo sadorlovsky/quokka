@@ -101,6 +101,38 @@ function sanitizeGameConfig(
 	return sanitized;
 }
 
+function hasValidWordGuessTeams(
+	roomPlayerIds: string[],
+	gameConfig: Record<string, unknown>,
+): boolean {
+	if (gameConfig.mode !== "teams") {
+		return true;
+	}
+
+	const teams = gameConfig.teams;
+	if (!teams || typeof teams !== "object") {
+		return false;
+	}
+
+	const roomPlayerSet = new Set(roomPlayerIds);
+	const assignmentCount = new Map<string, number>();
+
+	for (const members of Object.values(teams)) {
+		if (!Array.isArray(members) || members.length < 2) {
+			return false;
+		}
+
+		for (const playerId of members) {
+			if (typeof playerId !== "string" || !roomPlayerSet.has(playerId)) {
+				return false;
+			}
+			assignmentCount.set(playerId, (assignmentCount.get(playerId) ?? 0) + 1);
+		}
+	}
+
+	return roomPlayerIds.every((playerId) => assignmentCount.get(playerId) === 1);
+}
+
 function generateRoomCode(): string {
 	let code = "";
 	for (let i = 0; i < ROOM_CODE_LENGTH; i++) {
@@ -309,6 +341,12 @@ class RoomManager {
 		}
 		const allConnected = room.playerIds.every((id) => playerManager.get(id)?.isConnected);
 		if (!allConnected) {
+			return ErrorCode.INVALID_ACTION;
+		}
+		if (
+			room.settings.gameId === "word-guess" &&
+			!hasValidWordGuessTeams(room.playerIds, room.settings.gameConfig)
+		) {
 			return ErrorCode.INVALID_ACTION;
 		}
 		return null;

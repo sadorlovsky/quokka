@@ -369,6 +369,34 @@ describe("RoomManager", () => {
 		test("returns ROOM_NOT_FOUND for invalid code", () => {
 			expect(roomManager.canStart("ZZZZ", host.id)).toBe(ErrorCode.ROOM_NOT_FOUND);
 		});
+
+		test("rejects word-guess teams mode when some players are unassigned", () => {
+			const room = roomManager.create(host.id, {
+				gameId: "word-guess",
+				gameConfig: {
+					mode: "teams",
+					teams: { a: [host.id, player2.id], b: [] },
+				},
+			});
+			roomManager.join(room.code, player2.id);
+			roomManager.join(room.code, player3.id);
+
+			expect(roomManager.canStart(room.code, host.id)).toBe(ErrorCode.INVALID_ACTION);
+		});
+
+		test("rejects word-guess teams mode when a player is assigned twice", () => {
+			const room = roomManager.create(host.id, {
+				gameId: "word-guess",
+				gameConfig: {
+					mode: "teams",
+					teams: { a: [host.id, player2.id], b: [player2.id, player3.id] },
+				},
+			});
+			roomManager.join(room.code, player2.id);
+			roomManager.join(room.code, player3.id);
+
+			expect(roomManager.canStart(room.code, host.id)).toBe(ErrorCode.INVALID_ACTION);
+		});
 	});
 
 	describe("setStatus / setGameState", () => {

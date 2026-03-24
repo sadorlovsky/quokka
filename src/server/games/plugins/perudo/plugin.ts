@@ -196,11 +196,12 @@ export const perudoPlugin: GamePlugin<PerudoState, PerudoAction, PerudoConfig> =
 	defaultConfig: DEFAULT_PERUDO_CONFIG,
 
 	createInitialState(players: PlayerInfo[], config: PerudoConfig): PerudoState {
+		const merged = { ...DEFAULT_PERUDO_CONFIG, ...config };
 		const shuffled = shuffle(players);
 		const seatOrder = shuffled.map((p) => p.id);
 		const firstPlayer = seatOrder[0]!;
 
-		const turnTimeMs = config.turnTimeSeconds * 1000;
+		const turnTimeMs = merged.turnTimeSeconds * 1000;
 
 		return {
 			phase: "starting",
@@ -229,7 +230,7 @@ export const perudoPlugin: GamePlugin<PerudoState, PerudoAction, PerudoConfig> =
 			roundStarterId: firstPlayer,
 			timerEndsAt: Date.now() + ROUND_START_COUNTDOWN_MS,
 			turnTimeMs,
-			palificoEnabled: config.palifico,
+			palificoEnabled: merged.palifico,
 			winnerId: null,
 		};
 	},

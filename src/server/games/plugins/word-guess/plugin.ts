@@ -28,17 +28,15 @@ function buildExplainerOrder(players: PlayerInfo[], config: WordGuessConfig): st
 	const order: string[] = [];
 
 	if (config.mode === "teams" && config.teams) {
-		// Interleave teams: pick one from each team in round-robin
 		const teamIds = Object.keys(config.teams);
-		const teamQueues = teamIds.map((tid) => shuffle(config.teams![tid]!));
-
 		for (let cycle = 0; cycle < config.cycles; cycle++) {
+			// Interleave fresh per-cycle team shuffles so every assigned player explains once per cycle.
+			const teamQueues = teamIds.map((tid) => shuffle(config.teams![tid]!));
 			const maxLen = Math.max(...teamQueues.map((q) => q.length));
 			for (let i = 0; i < maxLen; i++) {
 				for (const queue of teamQueues) {
-					const idx = (cycle * queue.length + i) % queue.length;
-					if (idx < queue.length) {
-						order.push(queue[idx]!);
+					if (i < queue.length) {
+						order.push(queue[i]!);
 					}
 				}
 			}

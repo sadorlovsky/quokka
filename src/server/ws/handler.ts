@@ -134,6 +134,23 @@ function sendCurrentGameState(
 	});
 }
 
+function getLiveGameState(
+	room: ReturnType<typeof roomManager.get>,
+): Record<string, unknown> | null {
+	if (!room) {
+		return null;
+	}
+
+	const engine = getEngine(room.code);
+	const state = (engine?.getState() ?? room.gameState) as Record<string, unknown> | null;
+	return state && typeof state === "object" ? state : null;
+}
+
+function shouldReplayDrawingHistory(room: ReturnType<typeof roomManager.get>): boolean {
+	const state = getLiveGameState(room);
+	return state?.mode === "drawing" && state.phase === "showing";
+}
+
 function removePlayerFromRoom(
 	playerId: string,
 	notifySelf: "left" | "kicked" | "none" = "left",
@@ -262,7 +279,7 @@ function handleConnect(
 
 						// Send drawing history for reconnect
 						const strokes = getDrawingStrokes(room.code);
-						if (strokes && strokes.length > 0) {
+						if (strokes && strokes.length > 0 && shouldReplayDrawingHistory(room)) {
 							send(ws, { type: "drawHistory", strokes });
 						}
 					} else if (room.status === "finished") {

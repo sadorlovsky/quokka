@@ -138,6 +138,17 @@ describe("wordGuessPlugin", () => {
 			expect(p3.teamId).toBe("b");
 		});
 
+		test("Teams with uneven sizes: each assigned player explains once per cycle", () => {
+			const state = plugin.createInitialState(makePlayers(5), {
+				...teamsConfig,
+				teams: { a: ["p1", "p2"], b: ["p3", "p4", "p5"] },
+			});
+
+			expect(state.totalRounds).toBe(5);
+			expect(new Set(state.explainerOrder).size).toBe(5);
+			expect(state.explainerOrder).toEqual(expect.arrayContaining(["p1", "p2", "p3", "p4", "p5"]));
+		});
+
 		test("timerEndsAt is approximately now + ROUND_START_COUNTDOWN_MS", () => {
 			const before = Date.now();
 			const state = ffaState(2);

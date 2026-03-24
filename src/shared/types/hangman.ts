@@ -12,6 +12,7 @@ export type HangmanPhase =
 // --- Constants ---
 
 export const HANGMAN_TURN_TIMER_MS = 30_000; // 30s per guesser turn
+export const HANGMAN_WORD_PICK_TIMER_MS = 45_000; // 45s for executioner to submit a word
 export const HANGMAN_MAX_ERRORS = 6;
 
 // --- Config ---
@@ -127,6 +128,10 @@ export interface HangmanTurnTimeoutAction extends BaseGameAction {
 	type: "turnTimeout";
 }
 
+export interface HangmanWordPickTimeoutAction extends BaseGameAction {
+	type: "wordPickTimeout";
+}
+
 export interface HangmanNextRoundAction extends BaseGameAction {
 	type: "nextRound";
 }
@@ -137,4 +142,5 @@ export type HangmanAction =
 	| HangmanGuessLetterAction
 	| HangmanGuessWordAction
 	| HangmanTurnTimeoutAction
+	| HangmanWordPickTimeoutAction
 	| HangmanNextRoundAction;

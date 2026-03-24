@@ -44,6 +44,7 @@ export function ExecutionerWordInput({ dispatch }: ExecutionerWordInputProps) {
 			<p className="hangman-word-input-hint">
 				Существительное, именительный падеж, единственное число
 			</p>
+			<p className="hangman-word-input-hint">Если не успеете, слово будет выбрано автоматически</p>
 			<div className="hangman-word-input-field">
 				<input
 					className="input"

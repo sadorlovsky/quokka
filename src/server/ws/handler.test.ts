@@ -19,7 +19,17 @@ interface TestAction {
 	type: "finish";
 }
 
-const handlerPlugin: GamePlugin<TestState, TestAction, {}> = {
+interface TestDrawingState {
+	phase: "showing" | "starting";
+	mode: "drawing";
+	currentShowerId: string;
+}
+
+interface TestDrawingAction {
+	type: "nextPhase";
+}
+
+const handlerPlugin: GamePlugin<TestState, TestAction, Record<string, never>> = {
 	id: "test-handler",
 	name: "Test Handler",
 	minPlayers: 1,
@@ -53,6 +63,30 @@ const handlerPlugin: GamePlugin<TestState, TestAction, {}> = {
 	isGameOver: (state) => state.phase === "gameOver",
 };
 
+const drawingPlugin: GamePlugin<TestDrawingState, TestDrawingAction, Record<string, never>> = {
+	id: "test-drawing",
+	name: "Test Drawing",
+	minPlayers: 1,
+	maxPlayers: 8,
+	defaultConfig: {},
+	createInitialState: (players) => ({
+		phase: "showing",
+		mode: "drawing",
+		currentShowerId: players[0]!.id,
+	}),
+	reduce: (state, action) => {
+		if (action.type === "nextPhase") {
+			return { ...state, phase: "starting" };
+		}
+		return null;
+	},
+	validateAction: (_state, action) => (action.type === "nextPhase" ? null : "Unknown action"),
+	getPlayerView: (state) => state,
+	getSpectatorView: (state) => state,
+	getServerActions: () => [],
+	isGameOver: () => false,
+};
+
 function msg(obj: unknown): string {
 	return JSON.stringify(obj);
 }
@@ -69,6 +103,7 @@ function collectMessages(ws: ReturnType<typeof createMockWs>): unknown[] {
 describe("handleMessage integration", () => {
 	beforeEach(() => {
 		registerPlugin(handlerPlugin);
+		registerPlugin(drawingPlugin);
 	});
 
 	describe("malformed messages", () => {
@@ -363,6 +398,45 @@ describe("handleMessage integration", () => {
 					}),
 				]),
 			);
+
+			roomManager.leave(room.code, host.id);
+			playerManager.remove(host.id);
+		});
+
+		test("does not replay stale drawing history after round leaves showing phase", () => {
+			const hostWs = createMockWs();
+			const host = playerManager.create("Host", 0, hostWs);
+			const room = roomManager.create(host.id, { gameId: "test-drawing" });
+			const players: PlayerInfo[] = [playerManager.toPlayerInfo(host)];
+			const { engine } = startGame(room.code, "test-drawing", players, {});
+
+			handleMessage(
+				hostWs,
+				msg({
+					type: "drawStroke",
+					points: [{ x: 0.25, y: 0.5 }],
+					newStroke: true,
+				}),
+			);
+			engine!.handleAction(host.id, { type: "nextPhase" });
+			playerManager.disconnect(hostWs);
+
+			const reconnectWs = createMockWs();
+			const reconnectMessages = collectMessages(reconnectWs);
+
+			handleMessage(
+				reconnectWs,
+				msg({
+					type: "connect",
+					playerName: "Host",
+					avatarSeed: 0,
+					sessionToken: host.sessionToken,
+				}),
+			);
+
+			expect(
+				reconnectMessages.some((message) => (message as { type?: string }).type === "drawHistory"),
+			).toBe(false);
 
 			roomManager.leave(room.code, host.id);
 			playerManager.remove(host.id);

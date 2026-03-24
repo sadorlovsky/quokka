@@ -68,7 +68,16 @@ export function LobbyScreen() {
 			? ((config as WordGuessConfig).teams ?? { a: [], b: [] })
 			: { a: [], b: [] }
 	) as Record<string, string[]>;
-	const teamsValid = !isTeamsMode || Object.values(teams).every((members) => members.length >= 2);
+	const roomPlayerIds = room.players.map((p) => p.id);
+	const assignmentCount = new Map<string, number>();
+	for (const members of Object.values(teams)) {
+		for (const playerId of members) {
+			assignmentCount.set(playerId, (assignmentCount.get(playerId) ?? 0) + 1);
+		}
+	}
+	const teamsComplete = roomPlayerIds.every((playerId) => assignmentCount.get(playerId) === 1);
+	const teamsLargeEnough = Object.values(teams).every((members) => members.length >= 2);
+	const teamsValid = !isTeamsMode || (teamsComplete && teamsLargeEnough);
 	const canStartFinal = canStart && (!isTeamsMode || teamsValid);
 
 	const handleStart = () => {
@@ -183,9 +192,11 @@ export function LobbyScreen() {
 								: "Нужно ещё 2 игрока"
 							: !allConnected
 								? "Не все игроки онлайн"
-								: isTeamsMode && !teamsValid
-									? "В каждой команде нужно минимум 2 игрока"
-									: "Начать игру"}
+								: isTeamsMode && !teamsComplete
+									? "Распределите всех игроков по одной команде"
+									: isTeamsMode && !teamsLargeEnough
+										? "В каждой команде нужно минимум 2 игрока"
+										: "Начать игру"}
 					</button>
 				) : (
 					<div className="waiting-host">

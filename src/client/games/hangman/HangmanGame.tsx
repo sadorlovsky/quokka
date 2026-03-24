@@ -1,4 +1,5 @@
 import type { HangmanPlayerView } from "@/shared/types/hangman";
+import { Timer } from "../../components/Timer";
 import { useConnection } from "../../contexts/ConnectionContext";
 import { ExecutionerWordInput } from "./ExecutionerWordInput";
 import { GameOver } from "./GameOver";
@@ -33,6 +34,10 @@ export function HangmanGame() {
 		if (state.isExecutioner) {
 			return (
 				<div className="hangman">
+					<div className="hangman-waiting">
+						<p className="hangman-waiting-title">Выбирайте слово</p>
+						<Timer endsAt={state.timerEndsAt} />
+					</div>
 					<ExecutionerWordInput dispatch={dispatch} />
 				</div>
 			);
@@ -48,6 +53,7 @@ export function HangmanGame() {
 					<p className="hangman-waiting-hint">
 						Существительное, именительный падеж, единственное число
 					</p>
+					<Timer endsAt={state.timerEndsAt} />
 				</div>
 			</div>
 		);
