@@ -278,6 +278,24 @@ describe("GameEngine", () => {
 		});
 	});
 
+	describe("pause / resume", () => {
+		test("refreshes pause info when another player disconnects during pause", async () => {
+			const { engine } = startGame(roomCode, "test-counter", players, {});
+
+			engine!.pause(host.id);
+			const firstPause = engine!.getPauseInfo();
+			expect(firstPause?.disconnectedPlayerId).toBe(host.id);
+
+			await new Promise((resolve) => setTimeout(resolve, 5));
+
+			engine!.pause(player2.id);
+			const secondPause = engine!.getPauseInfo();
+
+			expect(secondPause?.disconnectedPlayerId).toBe(player2.id);
+			expect(secondPause?.timeoutAt ?? 0).toBeGreaterThan(firstPause?.timeoutAt ?? 0);
+		});
+	});
+
 	describe("broadcastState", () => {
 		test("sends personalized views to players", () => {
 			const sentMessages: string[] = [];

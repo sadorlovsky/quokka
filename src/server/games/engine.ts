@@ -70,7 +70,7 @@ export class GameEngine {
 	}
 
 	pause(disconnectedPlayerId: string): void {
-		if (this.paused || !this.state) {
+		if (!this.state) {
 			return;
 		}
 
@@ -99,6 +99,30 @@ export class GameEngine {
 
 		const player = playerManager.get(disconnectedPlayerId);
 		const now = Date.now();
+
+		if (this.paused) {
+			this.pauseInfo = {
+				disconnectedPlayerId,
+				disconnectedPlayerName: player?.name ?? "Игрок",
+				pausedAt: now,
+				timeoutAt: now + PAUSE_TIMEOUT_MS,
+			};
+
+			updatePersistedPauseInfo(this.roomCode, {
+				...this.pauseInfo,
+				savedTimerRemaining: this.savedTimerRemaining,
+			});
+
+			if (this.pauseTimerHandle) {
+				clearTimeout(this.pauseTimerHandle);
+			}
+			this.pauseTimerHandle = setTimeout(() => {
+				this.handlePauseTimeout();
+			}, PAUSE_TIMEOUT_MS);
+
+			this.broadcastPause();
+			return;
+		}
 
 		this.paused = true;
 		this.pauseInfo = {

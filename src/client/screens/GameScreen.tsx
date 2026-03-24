@@ -82,10 +82,27 @@ export function GameScreen() {
 	}
 
 	const isHost = room.hostId === playerId;
+	const canEndGame = isHost && room.status === "playing";
 
 	return (
 		<div className="screen game-screen">
 			<div className="game-header">
+				<div className="game-header-actions">
+					{canEndGame && (
+						<button
+							className="btn btn-secondary game-header-btn"
+							onClick={() => send({ type: "endGame" })}
+						>
+							Закончить игру
+						</button>
+					)}
+					<button
+						className="btn btn-secondary game-header-btn"
+						onClick={() => send({ type: "leaveRoom" })}
+					>
+						Выйти
+					</button>
+				</div>
 				<span className="room-code-small">{room.code}</span>
 			</div>
 			{room.settings.gameId === "word-guess" ? (

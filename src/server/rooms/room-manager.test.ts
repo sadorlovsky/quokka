@@ -438,4 +438,14 @@ describe("RoomManager", () => {
 			expect(roomManager.count).toBe(initial);
 		});
 	});
+
+	describe("canStart", () => {
+		test("rejects start when a player is offline", () => {
+			const room = roomManager.create(host.id);
+			roomManager.join(room.code, player2.id);
+			playerManager.disconnect(player2.ws!);
+
+			expect(roomManager.canStart(room.code, host.id)).toBe(ErrorCode.INVALID_ACTION);
+		});
+	});
 });

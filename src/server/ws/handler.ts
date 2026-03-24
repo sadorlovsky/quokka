@@ -2,6 +2,7 @@ import type { ServerWebSocket } from "bun";
 import { ErrorCode } from "@/shared/constants";
 import type { ClientMessage } from "@/shared/types/protocol";
 import { destroyEngine, getEngine, startGame } from "../games/engine";
+import { getPlugin } from "../games/registry";
 import { playerManager } from "../rooms/player-manager";
 import { roomManager } from "../rooms/room-manager";
 import { parseMessage, send, sendError, type WSData } from "./connection";
@@ -95,6 +96,103 @@ export function handleMessage(ws: ServerWebSocket<WSData>, raw: string | Buffer)
 	}
 }
 
+function sendCurrentGameState(
+	ws: ServerWebSocket<WSData>,
+	room: ReturnType<typeof roomManager.get>,
+	playerId: string,
+): void {
+	if (!room) {
+		return;
+	}
+
+	const engine = getEngine(room.code);
+	if (engine) {
+		const state = engine.getState();
+		if (!state) {
+			return;
+		}
+
+		send(ws, {
+			type: "gameState",
+			gameState: engine.getPlugin().getPlayerView(state, playerId),
+		});
+		return;
+	}
+
+	if (!room.gameState) {
+		return;
+	}
+
+	const plugin = getPlugin(room.settings.gameId);
+	if (!plugin) {
+		return;
+	}
+
+	send(ws, {
+		type: "gameState",
+		gameState: plugin.getPlayerView(room.gameState, playerId),
+	});
+}
+
+function removePlayerFromRoom(
+	playerId: string,
+	notifySelf: "left" | "kicked" | "none" = "left",
+): void {
+	const player = playerManager.get(playerId);
+	if (!player?.roomCode) {
+		return;
+	}
+
+	const roomCode = player.roomCode;
+	const roomBefore = roomManager.get(roomCode);
+	const wasPlaying = roomBefore?.status === "playing";
+
+	if (notifySelf === "left" && player.ws) {
+		send(player.ws, { type: "playerLeft", playerId });
+	} else if (notifySelf === "kicked" && player.ws) {
+		send(player.ws, { type: "playerKicked", playerId });
+	}
+
+	roomManager.leave(roomCode, playerId);
+
+	const roomAfter = roomManager.get(roomCode);
+
+	if (wasPlaying) {
+		destroyEngine(roomCode);
+		clearDrawingStrokes(roomCode);
+
+		if (!roomAfter) {
+			return;
+		}
+
+		roomManager.setStatus(roomCode, "lobby");
+		roomManager.setGameState(roomCode, null);
+
+		roomManager.sendToRoom(roomCode, {
+			type: "playerLeft",
+			playerId,
+		});
+		roomManager.sendToRoom(roomCode, {
+			type: "returnedToLobby",
+			room: roomManager.toRoomState(roomAfter),
+		});
+		return;
+	}
+
+	if (!roomAfter) {
+		return;
+	}
+
+	roomManager.sendToRoom(roomCode, {
+		type: "playerLeft",
+		playerId,
+	});
+	roomManager.sendToRoom(roomCode, {
+		type: "roomState",
+		room: roomManager.toRoomState(roomAfter),
+	});
+}
+
 function handleConnect(
 	ws: ServerWebSocket<WSData>,
 	msg: Extract<ClientMessage, { type: "connect" }>,
@@ -122,7 +220,7 @@ function handleConnect(
 
 				// Check if the room still exists before telling client about it
 				if (player.roomCode && !roomManager.get(player.roomCode)) {
-					player.roomCode = null;
+					playerManager.setRoomCode(player.id, null);
 				}
 
 				send(ws, {
@@ -151,35 +249,24 @@ function handleConnect(
 						const engine = getEngine(room.code);
 						if (engine) {
 							engine.resume(player.id);
-
-							// Send current game state (if still paused, broadcastState will fire on full resume)
-							if (!engine.isPaused()) {
-								const plugin = engine.getPlugin();
-								const state = engine.getState();
-								if (state) {
-									const view = plugin.getPlayerView(state, player.id);
-									send(ws, { type: "gameState", gameState: view });
-								}
-							} else {
-								// Game still paused — send state with paused timer + pause info
-								const plugin = engine.getPlugin();
-								const state = engine.getState();
-								if (state) {
-									const view = plugin.getPlayerView(state, player.id);
-									send(ws, { type: "gameState", gameState: view });
-								}
+							sendCurrentGameState(ws, room, player.id);
+							if (engine.isPaused()) {
 								const pauseInfo = engine.getPauseInfo();
 								if (pauseInfo) {
 									send(ws, { type: "gamePaused", pauseInfo });
 								}
 							}
-
-							// Send drawing history for reconnect
-							const strokes = getDrawingStrokes(room.code);
-							if (strokes && strokes.length > 0) {
-								send(ws, { type: "drawHistory", strokes });
-							}
+						} else {
+							sendCurrentGameState(ws, room, player.id);
 						}
+
+						// Send drawing history for reconnect
+						const strokes = getDrawingStrokes(room.code);
+						if (strokes && strokes.length > 0) {
+							send(ws, { type: "drawHistory", strokes });
+						}
+					} else if (room.status === "finished") {
+						sendCurrentGameState(ws, room, player.id);
 					}
 				}
 
@@ -288,27 +375,7 @@ function handleLeaveRoom(ws: ServerWebSocket<WSData>): void {
 	}
 
 	const roomCode = player.roomCode;
-
-	// Notify the leaving player first
-	send(ws, { type: "playerLeft", playerId: player.id });
-
-	roomManager.leave(roomCode, player.id);
-
-	// Notify remaining players
-	const room = roomManager.get(roomCode);
-	if (room) {
-		roomManager.sendToRoom(roomCode, {
-			type: "playerLeft",
-			playerId: player.id,
-		});
-
-		// If host changed, send updated room state
-		roomManager.sendToRoom(roomCode, {
-			type: "roomState",
-			room: roomManager.toRoomState(room),
-		});
-	}
-
+	removePlayerFromRoom(player.id, "left");
 	console.log(`[ws] ${player.name} left room ${roomCode}`);
 }
 
@@ -486,30 +553,7 @@ function handleKickPlayer(
 	}
 
 	const targetPlayer = playerManager.get(msg.targetPlayerId);
-
-	// Remove from room (ban API preserved but not called from UI)
-	roomManager.leave(room.code, msg.targetPlayerId);
-
-	// Notify kicked player
-	if (targetPlayer) {
-		roomManager.sendToPlayer(msg.targetPlayerId, {
-			type: "playerKicked",
-			playerId: msg.targetPlayerId,
-		});
-	}
-
-	// Notify remaining players
-	const updatedRoom = roomManager.get(room.code);
-	if (updatedRoom) {
-		roomManager.sendToRoom(room.code, {
-			type: "playerLeft",
-			playerId: msg.targetPlayerId,
-		});
-		roomManager.sendToRoom(room.code, {
-			type: "roomState",
-			room: roomManager.toRoomState(updatedRoom),
-		});
-	}
+	removePlayerFromRoom(msg.targetPlayerId, "kicked");
 
 	console.log(
 		`[ws] ${player.name} kicked ${targetPlayer?.name ?? msg.targetPlayerId} from room ${room.code}`,

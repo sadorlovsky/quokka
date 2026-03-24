@@ -307,6 +307,10 @@ class RoomManager {
 		if (room.playerIds.length < MIN_PLAYERS_TO_START) {
 			return ErrorCode.NOT_ENOUGH_PLAYERS;
 		}
+		const allConnected = room.playerIds.every((id) => playerManager.get(id)?.isConnected);
+		if (!allConnected) {
+			return ErrorCode.INVALID_ACTION;
+		}
 		return null;
 	}
 

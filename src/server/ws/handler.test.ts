@@ -1,10 +1,57 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import type { GamePlugin } from "@/shared/types/game";
+import type { PlayerInfo } from "@/shared/types/room";
 import { createMockWs } from "../__tests__/helpers";
+import { destroyEngine, getEngine, startGame } from "../games/engine";
+import { registerPlugin } from "../games/registry";
 import type { ServerPlayer } from "../rooms/player-manager";
 import { playerManager } from "../rooms/player-manager";
 import { roomManager } from "../rooms/room-manager";
 import { handleMessage } from "./handler";
 import { RateLimiter } from "./rate-limit";
+
+interface TestState {
+	phase: "playing" | "gameOver";
+	lastPlayerId: string | null;
+}
+
+interface TestAction {
+	type: "finish";
+}
+
+const handlerPlugin: GamePlugin<TestState, TestAction, {}> = {
+	id: "test-handler",
+	name: "Test Handler",
+	minPlayers: 1,
+	maxPlayers: 8,
+	defaultConfig: {},
+	createInitialState: () => ({
+		phase: "playing",
+		lastPlayerId: null,
+	}),
+	reduce: (state, action, playerId) => {
+		if (action.type === "finish") {
+			return { ...state, phase: "gameOver", lastPlayerId: playerId };
+		}
+		return null;
+	},
+	validateAction: (state, action) => {
+		if (state.phase === "gameOver") {
+			return "Game is over";
+		}
+		return action.type === "finish" ? null : "Unknown action";
+	},
+	getPlayerView: (state, playerId) => ({
+		phase: state.phase,
+		playerId,
+	}),
+	getSpectatorView: (state) => ({
+		phase: state.phase,
+		spectating: true,
+	}),
+	getServerActions: () => [],
+	isGameOver: (state) => state.phase === "gameOver",
+};
 
 function msg(obj: unknown): string {
 	return JSON.stringify(obj);
@@ -20,6 +67,10 @@ function collectMessages(ws: ReturnType<typeof createMockWs>): unknown[] {
 }
 
 describe("handleMessage integration", () => {
+	beforeEach(() => {
+		registerPlugin(handlerPlugin);
+	});
+
 	describe("malformed messages", () => {
 		test("rejects invalid JSON", () => {
 			const ws = createMockWs();
@@ -231,6 +282,90 @@ describe("handleMessage integration", () => {
 			expect(limiter.check(ip)).toBe(true);
 			expect(limiter.check(ip)).toBe(true);
 			expect(limiter.check(ip)).toBe(false);
+		});
+	});
+
+	describe("multiplayer lifecycle", () => {
+		test("leaveRoom during active game returns remaining players to lobby", () => {
+			const hostWs = createMockWs();
+			const guestWs = createMockWs();
+			const hostMessages = collectMessages(hostWs);
+			const guestMessages = collectMessages(guestWs);
+
+			const host = playerManager.create("Host", 0, hostWs);
+			const guest = playerManager.create("Guest", 0, guestWs);
+
+			const room = roomManager.create(host.id, { gameId: "test-handler" });
+			roomManager.join(room.code, guest.id);
+
+			const players: PlayerInfo[] = [
+				playerManager.toPlayerInfo(host),
+				playerManager.toPlayerInfo(guest),
+			];
+			startGame(room.code, "test-handler", players, {});
+
+			handleMessage(guestWs, msg({ type: "leaveRoom" }));
+
+			const updatedRoom = roomManager.get(room.code);
+			expect(updatedRoom?.status).toBe("lobby");
+			expect(updatedRoom?.playerIds).toEqual([host.id]);
+			expect(getEngine(room.code)).toBeNull();
+			expect(guest.roomCode).toBeNull();
+
+			expect(guestMessages).toContainEqual({ type: "playerLeft", playerId: guest.id });
+			expect(hostMessages).toContainEqual({ type: "playerLeft", playerId: guest.id });
+			expect(hostMessages).toContainEqual({
+				type: "returnedToLobby",
+				room: roomManager.toRoomState(updatedRoom!),
+			});
+
+			roomManager.leave(room.code, host.id);
+			playerManager.remove(host.id);
+			playerManager.remove(guest.id);
+		});
+
+		test("reconnect to finished room restores game state even without a live engine", () => {
+			const hostWs = createMockWs();
+			const host = playerManager.create("Host", 0, hostWs);
+			const room = roomManager.create(host.id, { gameId: "test-handler" });
+			const players: PlayerInfo[] = [playerManager.toPlayerInfo(host)];
+			const { engine } = startGame(room.code, "test-handler", players, {});
+
+			engine!.handleAction(host.id, { type: "finish" });
+			expect(roomManager.get(room.code)?.status).toBe("finished");
+
+			destroyEngine(room.code);
+			playerManager.disconnect(hostWs);
+
+			const reconnectWs = createMockWs();
+			const reconnectMessages = collectMessages(reconnectWs);
+
+			handleMessage(
+				reconnectWs,
+				msg({
+					type: "connect",
+					playerName: "Host",
+					avatarSeed: 0,
+					sessionToken: host.sessionToken,
+				}),
+			);
+
+			expect(reconnectMessages).toEqual(
+				expect.arrayContaining([
+					expect.objectContaining({ type: "connected", playerId: host.id, roomCode: room.code }),
+					expect.objectContaining({
+						type: "roomState",
+						room: expect.objectContaining({ code: room.code, status: "finished" }),
+					}),
+					expect.objectContaining({
+						type: "gameState",
+						gameState: expect.objectContaining({ phase: "gameOver", playerId: host.id }),
+					}),
+				]),
+			);
+
+			roomManager.leave(room.code, host.id);
+			playerManager.remove(host.id);
 		});
 	});
 });
