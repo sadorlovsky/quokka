@@ -6,7 +6,7 @@ RUN bun install --frozen-lockfile --production
 FROM oven/bun:1-slim
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY package.json ./
+COPY package.json tsconfig.json ./
 COPY src ./src
 COPY public ./public
 RUN mkdir -p data
