@@ -4,25 +4,6 @@
 	position: relative;
 }
 
-/* Emoji pattern background */
-
-.home-pattern {
-	position: fixed;
-	inset: -30%;
-	background-repeat: repeat;
-	background-size: 120px 120px;
-	opacity: 0.06;
-	transform: rotate(-15deg);
-	pointer-events: none;
-	z-index: 0;
-	filter: blur(2px);
-}
-
-.home-screen > *:not(.home-pattern) {
-	position: relative;
-	z-index: 1;
-}
-
 /* Brand */
 
 .home-brand {

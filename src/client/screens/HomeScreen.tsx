@@ -29,11 +29,14 @@ export function HomeScreen() {
 	const { send, status, ensurePlayer } = useConnection();
 	const [playerName, setPlayerName] = useState(getOrCreatePlayerName);
 	const [avatarSeed] = useState(getOrCreateAvatarSeed);
-	const [selectedGame, setSelectedGame] = useState("word-guess");
+	const [selectedGame, setSelectedGame] = useState(
+		() => localStorage.getItem("selectedGame") ?? "word-guess",
+	);
 	const [roomCode, setRoomCode] = useState("");
 	const [mode, setMode] = useState<"menu" | "join">("menu");
 
 	const isConnected = status === "connected";
+
 
 	const handleCreate = () => {
 		const name = playerName.trim() || generateRandomName();
@@ -54,16 +57,8 @@ export function HomeScreen() {
 		});
 	};
 
-	const selectedEmoji = GAME_META[selectedGame]?.emoji ?? "";
-	const patternSvg = `data:image/svg+xml,${encodeURIComponent(
-		`<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><text x="60" y="66" text-anchor="middle" dominant-baseline="central" font-size="48">${selectedEmoji}</text></svg>`,
-	)}`;
-
 	return (
 		<div className="screen home-screen">
-			{mode === "menu" && (
-				<div className="home-pattern" style={{ backgroundImage: `url("${patternSvg}")` }} />
-			)}
 			<div className="home-brand">
 				<h1 className="home-title">Fishka</h1>
 				<p className="home-subtitle">вечерние игры с друзьями</p>
@@ -100,6 +95,7 @@ export function HomeScreen() {
 										onClick={() => {
 											if (!isDisabled) {
 												setSelectedGame(id);
+												localStorage.setItem("selectedGame", id);
 											}
 										}}
 									>
