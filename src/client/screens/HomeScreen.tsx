@@ -1,4 +1,4 @@
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useMemo, useState } from "react";
 import { GAME_META } from "@/shared/games";
 import { Avatar } from "../components/Avatar";
 import { useConnection } from "../contexts/ConnectionContext";
@@ -37,6 +37,19 @@ export function HomeScreen() {
 
 	const isConnected = status === "connected";
 	const selectedMeta = GAME_META[selectedGame];
+
+	const { available, comingSoon } = useMemo(() => {
+		const avail: [string, (typeof GAME_META)[string]][] = [];
+		const soon: [string, (typeof GAME_META)[string]][] = [];
+		for (const [id, meta] of Object.entries(GAME_META)) {
+			if (meta.comingSoon) {
+				soon.push([id, meta]);
+			} else {
+				avail.push([id, meta]);
+			}
+		}
+		return { available: avail, comingSoon: soon };
+	}, []);
 
 	const handleCreate = () => {
 		const name = playerName.trim() || generateRandomName();
@@ -88,40 +101,46 @@ export function HomeScreen() {
 				{/* Center column: Game selector */}
 				<section className="home-col-games" aria-label="Выбор игры">
 					{mode === "menu" && (
-						<div className="game-selector">
-							{Object.entries(GAME_META).map(([id, meta]) => {
-								const isSelected = id === selectedGame;
-								const isDisabled = !!meta.comingSoon;
-								return (
-									<div key={id} className="game-selector-item">
+						<>
+							<div className="game-grid">
+								{available.map(([id, meta]) => {
+									const isSelected = id === selectedGame;
+									return (
 										<button
+											key={id}
 											type="button"
-											className={`game-logo ${isDisabled ? "game-logo--coming-soon" : isSelected ? "game-logo--selected" : "game-logo--dimmed"}`}
-											disabled={isDisabled}
+											className={`game-tile ${isSelected ? "game-tile--selected" : ""}`}
 											aria-pressed={isSelected}
-											aria-label={`${meta.name}${isDisabled ? " (скоро)" : ""}`}
+											aria-label={meta.name}
 											onClick={() => {
-												if (!isDisabled) {
-													setSelectedGame(id);
-													localStorage.setItem("selectedGame", id);
-												}
+												setSelectedGame(id);
+												localStorage.setItem("selectedGame", id);
 											}}
 										>
-											<span className="game-logo-emoji" aria-hidden="true">
+											<span className="game-tile-emoji" aria-hidden="true">
 												{meta.emoji}
 											</span>
-											<span className="game-logo-label">{meta.name}</span>
-											{isDisabled && <span className="game-logo-soon">скоро</span>}
+											<span className="game-tile-name">{meta.name}</span>
+											{meta.players && <span className="game-tile-players">{meta.players}</span>}
 										</button>
-										<span
-											className={`game-selector-name ${isSelected ? "game-selector-name--active" : ""}`}
-										>
-											{meta.name}
-										</span>
+									);
+								})}
+							</div>
+
+							{comingSoon.length > 0 && (
+								<div className="game-coming-soon">
+									<span className="game-coming-soon-label">Скоро</span>
+									<div className="game-coming-soon-list">
+										{comingSoon.map(([id, meta]) => (
+											<span key={id} className="game-coming-soon-item">
+												<span aria-hidden="true">{meta.emoji}</span>
+												{meta.name}
+											</span>
+										))}
 									</div>
-								);
-							})}
-						</div>
+								</div>
+							)}
+						</>
 					)}
 
 					{mode === "join" && (
@@ -156,7 +175,7 @@ export function HomeScreen() {
 					)}
 				</section>
 
-				{/* Right column: Game description (desktop only, menu mode) */}
+				{/* Right column: Game description (desktop sidebar) */}
 				{mode === "menu" && selectedMeta && (
 					<aside className="home-col-detail" aria-label="Описание игры">
 						<div className="game-detail">
@@ -174,6 +193,13 @@ export function HomeScreen() {
 					</aside>
 				)}
 			</div>
+
+			{/* Mobile-only inline description */}
+			{mode === "menu" && selectedMeta?.description && (
+				<div className="game-desc-mobile">
+					<p className="game-desc-mobile-text">{selectedMeta.description}</p>
+				</div>
+			)}
 
 			{/* Actions pinned to bottom */}
 			{mode === "menu" && (
