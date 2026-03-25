@@ -36,7 +36,7 @@ export function HomeScreen() {
 	const [mode, setMode] = useState<"menu" | "join">("menu");
 
 	const isConnected = status === "connected";
-
+	const selectedMeta = GAME_META[selectedGame];
 
 	const handleCreate = () => {
 		const name = playerName.trim() || generateRandomName();
@@ -64,54 +64,120 @@ export function HomeScreen() {
 				<p className="home-subtitle">вечерние игры с друзьями</p>
 			</div>
 
-			<div className="player-identity">
-				<Avatar seed={avatarSeed} />
-				<div className="player-identity-input">
-					<span className="player-identity-prefix">Игрок</span>
-					<input
-						type="text"
-						className="input"
-						value={playerName}
-						onChange={(e) => setPlayerName(e.target.value)}
-						maxLength={20}
-						data-1p-ignore
-						autoComplete="off"
-					/>
-				</div>
+			<div className="home-columns">
+				{/* Left column: Player identity */}
+				<section className="home-col-player" aria-label="Настройки игрока">
+					<div className="player-identity">
+						<Avatar seed={avatarSeed} />
+						<div className="player-identity-input">
+							<span className="player-identity-prefix">Игрок</span>
+							<input
+								type="text"
+								className="input"
+								value={playerName}
+								onChange={(e) => setPlayerName(e.target.value)}
+								maxLength={20}
+								data-1p-ignore
+								autoComplete="off"
+								aria-label="Имя игрока"
+							/>
+						</div>
+					</div>
+				</section>
+
+				{/* Center column: Game selector */}
+				<section className="home-col-games" aria-label="Выбор игры">
+					{mode === "menu" && (
+						<div className="game-selector">
+							{Object.entries(GAME_META).map(([id, meta]) => {
+								const isSelected = id === selectedGame;
+								const isDisabled = !!meta.comingSoon;
+								return (
+									<div key={id} className="game-selector-item">
+										<button
+											type="button"
+											className={`game-logo ${isDisabled ? "game-logo--coming-soon" : isSelected ? "game-logo--selected" : "game-logo--dimmed"}`}
+											disabled={isDisabled}
+											aria-pressed={isSelected}
+											aria-label={`${meta.name}${isDisabled ? " (скоро)" : ""}`}
+											onClick={() => {
+												if (!isDisabled) {
+													setSelectedGame(id);
+													localStorage.setItem("selectedGame", id);
+												}
+											}}
+										>
+											<span className="game-logo-emoji" aria-hidden="true">
+												{meta.emoji}
+											</span>
+											<span className="game-logo-label">{meta.name}</span>
+											{isDisabled && <span className="game-logo-soon">скоро</span>}
+										</button>
+										<span
+											className={`game-selector-name ${isSelected ? "game-selector-name--active" : ""}`}
+										>
+											{meta.name}
+										</span>
+									</div>
+								);
+							})}
+						</div>
+					)}
+
+					{mode === "join" && (
+						<form className="form" onSubmit={handleJoin}>
+							<input
+								type="text"
+								className="input input-code"
+								placeholder="Код комнаты"
+								value={roomCode}
+								onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+								maxLength={6}
+								aria-label="Код комнаты"
+							/>
+							<button
+								type="submit"
+								className="btn btn-primary"
+								disabled={!isConnected || !roomCode.trim()}
+							>
+								Войти
+							</button>
+							<button
+								type="button"
+								className="btn btn-secondary"
+								onClick={() => {
+									setMode("menu");
+									history.replaceState(null, "", "/");
+								}}
+							>
+								Назад
+							</button>
+						</form>
+					)}
+				</section>
+
+				{/* Right column: Game description (desktop only, menu mode) */}
+				{mode === "menu" && selectedMeta && (
+					<aside className="home-col-detail" aria-label="Описание игры">
+						<div className="game-detail">
+							<span className="game-detail-emoji" aria-hidden="true">
+								{selectedMeta.emoji}
+							</span>
+							<h2 className="game-detail-name">{selectedMeta.name}</h2>
+							{selectedMeta.players && (
+								<span className="game-detail-players">{selectedMeta.players} игроков</span>
+							)}
+							{selectedMeta.description && (
+								<p className="game-detail-desc">{selectedMeta.description}</p>
+							)}
+						</div>
+					</aside>
+				)}
 			</div>
 
+			{/* Actions pinned to bottom */}
 			{mode === "menu" && (
-				<div className="form">
-					<div className="game-selector">
-						{Object.entries(GAME_META).map(([id, meta]) => {
-							const isSelected = id === selectedGame;
-							const isDisabled = !!meta.comingSoon;
-							return (
-								<div key={id} className="game-selector-item">
-									<button
-										type="button"
-										className={`game-logo ${isDisabled ? "game-logo--coming-soon" : isSelected ? "game-logo--selected" : "game-logo--dimmed"}`}
-										disabled={isDisabled}
-										onClick={() => {
-											if (!isDisabled) {
-												setSelectedGame(id);
-												localStorage.setItem("selectedGame", id);
-											}
-										}}
-									>
-										<span className="game-logo-emoji">{meta.emoji}</span>
-										<span className="game-logo-label">{meta.name}</span>
-										{isDisabled && <span className="game-logo-soon">скоро</span>}
-									</button>
-									<span
-										className={`game-selector-name ${isSelected ? "game-selector-name--active" : ""}`}
-									>
-										{meta.name}
-									</span>
-								</div>
-							);
-						})}
-					</div>
+				<div className="home-actions">
 					<button
 						type="button"
 						className="btn btn-primary"
@@ -130,38 +196,6 @@ export function HomeScreen() {
 						Присоединиться
 					</button>
 				</div>
-			)}
-
-			{mode === "join" && (
-				<>
-					<form className="form" onSubmit={handleJoin}>
-						<input
-							type="text"
-							className="input input-code"
-							placeholder="Код комнаты"
-							value={roomCode}
-							onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-							maxLength={6}
-						/>
-						<button
-							type="submit"
-							className="btn btn-primary"
-							disabled={!isConnected || !roomCode.trim()}
-						>
-							Войти
-						</button>
-					</form>
-					<button
-						type="button"
-						className="btn btn-secondary"
-						onClick={() => {
-							setMode("menu");
-							history.replaceState(null, "", "/");
-						}}
-					>
-						Назад
-					</button>
-				</>
 			)}
 		</div>
 	);
