@@ -38,18 +38,7 @@ export function HomeScreen() {
 	const isConnected = status === "connected";
 	const selectedMeta = GAME_META[selectedGame];
 
-	const { available, comingSoon } = useMemo(() => {
-		const avail: [string, (typeof GAME_META)[string]][] = [];
-		const soon: [string, (typeof GAME_META)[string]][] = [];
-		for (const [id, meta] of Object.entries(GAME_META)) {
-			if (meta.comingSoon) {
-				soon.push([id, meta]);
-			} else {
-				avail.push([id, meta]);
-			}
-		}
-		return { available: avail, comingSoon: soon };
-	}, []);
+	const games = useMemo(() => Object.entries(GAME_META), []);
 
 	const handleCreate = () => {
 		const name = playerName.trim() || generateRandomName();
@@ -104,7 +93,7 @@ export function HomeScreen() {
 						{/* Center column: Game selector */}
 						<section className="home-col-games" aria-label="Выбор игры">
 							<div className="game-grid">
-								{available.map(([id, meta]) => {
+								{games.map(([id, meta]) => {
 									const isSelected = id === selectedGame;
 									return (
 										<button
@@ -127,20 +116,6 @@ export function HomeScreen() {
 									);
 								})}
 							</div>
-
-							{comingSoon.length > 0 && (
-								<div className="game-coming-soon">
-									<span className="game-coming-soon-label">Скоро</span>
-									<div className="game-coming-soon-list">
-										{comingSoon.map(([id, meta]) => (
-											<span key={id} className="game-coming-soon-item">
-												<span aria-hidden="true">{meta.emoji}</span>
-												{meta.name}
-											</span>
-										))}
-									</div>
-								</div>
-							)}
 						</section>
 
 						{/* Right column: Game description (desktop sidebar) */}

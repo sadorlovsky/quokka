@@ -5,7 +5,6 @@ export const GAME_META: Record<
 		name: string;
 		description?: string;
 		players?: string;
-		comingSoon?: boolean;
 	}
 > = {
 	"word-guess": {
@@ -50,9 +49,4 @@ export const GAME_META: Record<
 			"Город засыпает. Просыпается мафия... Найдите мафиози среди мирных жителей, пока они не захватили город.",
 		players: "6–16",
 	},
-	trivia: { emoji: "❓", name: "Викторина", comingSoon: true },
-	codenames: { emoji: "🕵️", name: "Codenames", comingSoon: true },
-	battleship: { emoji: "🚢", name: "Морской бой", comingSoon: true },
-	"who-am-i": { emoji: "🤔", name: "Кто я?", comingSoon: true },
-	jeopardy: { emoji: "🏆", name: "Свояк", comingSoon: true },
 };
