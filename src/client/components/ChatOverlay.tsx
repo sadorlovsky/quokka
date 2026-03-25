@@ -1,69 +1,12 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import type { ChatBroadcastMessage } from "@/shared/types/protocol";
-import { useConnection } from "../contexts/ConnectionContext";
+import { useEffect, useRef, useState } from "react";
+import { useChatMessages } from "../hooks/useChatMessages";
 import "./ChatOverlay.css";
 
-interface ChatEntry {
-	id: number;
-	playerId: string;
-	playerName: string;
-	text: string;
-	fading: boolean;
-}
-
-let nextId = 0;
-
 export function ChatOverlay() {
-	const { send, onChatMessage, room } = useConnection();
-	const [messages, setMessages] = useState<ChatEntry[]>([]);
+	const { messages, sendMessage, getPlayerColor } = useChatMessages({ autoFade: true });
 	const [text, setText] = useState("");
 	const [open, setOpen] = useState(false);
 	const inputRef = useRef<HTMLInputElement>(null);
-	const timersRef = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
-
-	const scheduleRemoval = useCallback((id: number) => {
-		const fadeTimer = setTimeout(() => {
-			setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, fading: true } : m)));
-		}, 4500);
-
-		const removeTimer = setTimeout(() => {
-			setMessages((prev) => prev.filter((m) => m.id !== id));
-			timersRef.current.delete(id);
-		}, 5000);
-
-		timersRef.current.set(id, fadeTimer);
-		timersRef.current.set(-id - 1, removeTimer);
-	}, []);
-
-	useEffect(() => {
-		const unsub = onChatMessage((msg: ChatBroadcastMessage) => {
-			const id = nextId++;
-			setMessages((prev) => {
-				const next = [
-					...prev,
-					{
-						id,
-						playerId: msg.playerId,
-						playerName: msg.playerName,
-						text: msg.text,
-						fading: false,
-					},
-				];
-				return next.length > 20 ? next.slice(-20) : next;
-			});
-			scheduleRemoval(id);
-		});
-		return unsub;
-	}, [onChatMessage, scheduleRemoval]);
-
-	useEffect(() => {
-		const timers = timersRef.current;
-		return () => {
-			for (const t of timers.values()) {
-				clearTimeout(t);
-			}
-		};
-	}, []);
 
 	// Focus input when opened
 	useEffect(() => {
@@ -78,7 +21,7 @@ export function ChatOverlay() {
 		if (!trimmed) {
 			return;
 		}
-		send({ type: "chatMessage", text: trimmed });
+		sendMessage(trimmed);
 		setText("");
 	};
 
@@ -86,15 +29,6 @@ export function ChatOverlay() {
 		if (!text.trim()) {
 			setOpen(false);
 		}
-	};
-
-	const getPlayerColor = (playerId: string): string => {
-		const player = room?.players.find((p) => p.id === playerId);
-		if (!player) {
-			return "hsl(0, 0%, 60%)";
-		}
-		const hue = player.avatarSeed % 360;
-		return `hsl(${hue}, 70%, 60%)`;
 	};
 
 	return (

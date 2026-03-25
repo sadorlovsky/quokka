@@ -9,6 +9,7 @@ import { DEFAULT_TAPEWORM_CONFIG } from "@/shared/types/tapeworm";
 import type { WordGuessConfig } from "@/shared/types/word-guess";
 import { DEFAULT_WORD_GUESS_CONFIG } from "@/shared/types/word-guess";
 import { GameSettings } from "../components/GameSettings";
+import { LobbyChat } from "../components/LobbyChat";
 import { PlayerRoster } from "../components/PlayerRoster";
 import { useConnection } from "../contexts/ConnectionContext";
 import "./LobbyScreen.css";
@@ -218,9 +219,7 @@ export function LobbyScreen() {
 						onUpdateTeams={handleUpdateTeams}
 						onSwitchTeam={(teamId) => send({ type: "switchTeam", teamId })}
 						onKick={
-							isHost
-								? (targetPlayerId) => send({ type: "kickPlayer", targetPlayerId })
-								: undefined
+							isHost ? (targetPlayerId) => send({ type: "kickPlayer", targetPlayerId }) : undefined
 						}
 					/>
 				</section>
@@ -235,8 +234,9 @@ export function LobbyScreen() {
 				</section>
 			</div>
 
-			{/* Start button pinned to bottom */}
+			{/* Chat + start button pinned to bottom */}
 			<div className="lobby-actions">
+				<LobbyChat />
 				{isHost ? (
 					<button className="btn btn-primary" disabled={!canStartFinal} onClick={handleStart}>
 						{room.players.length < 2

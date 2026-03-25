@@ -179,12 +179,7 @@ function Router() {
 			</>
 		);
 	}
-	return (
-		<>
-			<LobbyScreen />
-			<ChatOverlay />
-		</>
-	);
+	return <LobbyScreen />;
 }
 
 export function App() {

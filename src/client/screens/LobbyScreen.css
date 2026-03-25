@@ -139,11 +139,7 @@
 	align-items: center;
 	gap: 0.625rem;
 	padding: 0.5rem 1rem;
-	background: linear-gradient(
-		135deg,
-		rgba(240, 160, 48, 0.1) 0%,
-		rgba(180, 100, 255, 0.06) 100%
-	);
+	background: linear-gradient(135deg, rgba(240, 160, 48, 0.1) 0%, rgba(180, 100, 255, 0.06) 100%);
 	border: 1.5px solid rgba(240, 160, 48, 0.2);
 	border-radius: var(--radius-md);
 	box-shadow:
@@ -184,6 +180,9 @@
    ============================================= */
 
 .lobby-actions {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
 	margin-top: auto;
 	padding-top: 1rem;
 	width: 100%;
