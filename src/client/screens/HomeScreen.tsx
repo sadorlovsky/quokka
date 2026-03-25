@@ -77,31 +77,31 @@ export function HomeScreen() {
 				<p className="home-subtitle">вечерние игры с друзьями</p>
 			</div>
 
-			<div className="home-columns">
-				{/* Left column: Player identity */}
-				<section className="home-col-player" aria-label="Настройки игрока">
-					<div className="player-identity">
-						<Avatar seed={avatarSeed} />
-						<div className="player-identity-input">
-							<span className="player-identity-prefix">Игрок</span>
-							<input
-								type="text"
-								className="input"
-								value={playerName}
-								onChange={(e) => setPlayerName(e.target.value)}
-								maxLength={20}
-								data-1p-ignore
-								autoComplete="off"
-								aria-label="Имя игрока"
-							/>
-						</div>
-					</div>
-				</section>
+			{mode === "menu" && (
+				<>
+					<div className="home-columns">
+						{/* Left column: Player identity */}
+						<section className="home-col-player" aria-label="Настройки игрока">
+							<div className="player-identity">
+								<Avatar seed={avatarSeed} />
+								<div className="player-identity-input">
+									<span className="player-identity-prefix">Игрок</span>
+									<input
+										type="text"
+										className="input"
+										value={playerName}
+										onChange={(e) => setPlayerName(e.target.value)}
+										maxLength={20}
+										data-1p-ignore
+										autoComplete="off"
+										aria-label="Имя игрока"
+									/>
+								</div>
+							</div>
+						</section>
 
-				{/* Center column: Game selector */}
-				<section className="home-col-games" aria-label="Выбор игры">
-					{mode === "menu" && (
-						<>
+						{/* Center column: Game selector */}
+						<section className="home-col-games" aria-label="Выбор игры">
 							<div className="game-grid">
 								{available.map(([id, meta]) => {
 									const isSelected = id === selectedGame;
@@ -140,86 +140,91 @@ export function HomeScreen() {
 									</div>
 								</div>
 							)}
-						</>
-					)}
+						</section>
 
-					{mode === "join" && (
-						<form className="form" onSubmit={handleJoin}>
-							<input
-								type="text"
-								className="input input-code"
-								placeholder="Код комнаты"
-								value={roomCode}
-								onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
-								maxLength={6}
-								aria-label="Код комнаты"
-							/>
-							<button
-								type="submit"
-								className="btn btn-primary"
-								disabled={!isConnected || !roomCode.trim()}
-							>
-								Войти
-							</button>
-							<button
-								type="button"
-								className="btn btn-secondary"
-								onClick={() => {
-									setMode("menu");
-									history.replaceState(null, "", "/");
-								}}
-							>
-								Назад
-							</button>
-						</form>
-					)}
-				</section>
+						{/* Right column: Game description (desktop sidebar) */}
+						{selectedMeta && (
+							<aside className="home-col-detail" aria-label="Описание игры">
+								<div className="game-detail">
+									<span className="game-detail-emoji" aria-hidden="true">
+										{selectedMeta.emoji}
+									</span>
+									<h2 className="game-detail-name">{selectedMeta.name}</h2>
+									{selectedMeta.players && (
+										<span className="game-detail-players">{selectedMeta.players} игроков</span>
+									)}
+									{selectedMeta.description && (
+										<p className="game-detail-desc">{selectedMeta.description}</p>
+									)}
+								</div>
+							</aside>
+						)}
+					</div>
 
-				{/* Right column: Game description (desktop sidebar) */}
-				{mode === "menu" && selectedMeta && (
-					<aside className="home-col-detail" aria-label="Описание игры">
-						<div className="game-detail">
-							<span className="game-detail-emoji" aria-hidden="true">
-								{selectedMeta.emoji}
-							</span>
-							<h2 className="game-detail-name">{selectedMeta.name}</h2>
-							{selectedMeta.players && (
-								<span className="game-detail-players">{selectedMeta.players} игроков</span>
-							)}
-							{selectedMeta.description && (
-								<p className="game-detail-desc">{selectedMeta.description}</p>
-							)}
+					{/* Mobile-only inline description */}
+					{selectedMeta?.description && (
+						<div className="game-desc-mobile">
+							<p className="game-desc-mobile-text">{selectedMeta.description}</p>
 						</div>
-					</aside>
-				)}
-			</div>
+					)}
 
-			{/* Mobile-only inline description */}
-			{mode === "menu" && selectedMeta?.description && (
-				<div className="game-desc-mobile">
-					<p className="game-desc-mobile-text">{selectedMeta.description}</p>
-				</div>
+					{/* Actions pinned to bottom */}
+					<div className="home-actions">
+						<button
+							type="button"
+							className="btn btn-primary"
+							disabled={!isConnected}
+							onClick={handleCreate}
+						>
+							Создать комнату
+						</button>
+						<span className="home-divider">или</span>
+						<button
+							type="button"
+							className="btn btn-secondary"
+							disabled={!isConnected}
+							onClick={() => setMode("join")}
+						>
+							Присоединиться
+						</button>
+					</div>
+				</>
 			)}
 
-			{/* Actions pinned to bottom */}
-			{mode === "menu" && (
-				<div className="home-actions">
+			{mode === "join" && (
+				<div className="join-card">
+					<div className="join-card-header">
+						<h2 className="join-card-title">Присоединиться</h2>
+						<p className="join-card-hint">Введите код комнаты, который дал вам хост</p>
+					</div>
+					<form className="form" onSubmit={handleJoin}>
+						<input
+							type="text"
+							className="input input-code"
+							placeholder="ABCDEF"
+							value={roomCode}
+							onChange={(e) => setRoomCode(e.target.value.toUpperCase())}
+							maxLength={6}
+							aria-label="Код комнаты"
+						/>
+						<button
+							type="submit"
+							className="btn btn-primary"
+							disabled={!isConnected || !roomCode.trim()}
+						>
+							Войти
+						</button>
+					</form>
 					<button
 						type="button"
-						className="btn btn-primary"
-						disabled={!isConnected}
-						onClick={handleCreate}
+						className="join-card-back"
+						onClick={() => {
+							setMode("menu");
+							setRoomCode("");
+							history.replaceState(null, "", "/");
+						}}
 					>
-						Создать комнату
-					</button>
-					<span className="home-divider">или</span>
-					<button
-						type="button"
-						className="btn btn-secondary"
-						disabled={!isConnected}
-						onClick={() => setMode("join")}
-					>
-						Присоединиться
+						← Назад
 					</button>
 				</div>
 			)}
