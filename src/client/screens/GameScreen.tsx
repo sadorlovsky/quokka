@@ -4,6 +4,7 @@ import { PlayerChip } from "../components/PlayerChip";
 import { useConnection } from "../contexts/ConnectionContext";
 import { CrocodileGame } from "../games/crocodile/CrocodileGame";
 import { HangmanGame } from "../games/hangman/HangmanGame";
+import { MafiaGame } from "../games/mafia/MafiaGame";
 import { PerudoGame } from "../games/perudo/PerudoGame";
 import { TapewormGame } from "../games/tapeworm/TapewormGame";
 import { WordGuessGame } from "../games/word-guess/WordGuessGame";
@@ -113,6 +114,8 @@ export function GameScreen() {
 				<CrocodileGame />
 			) : room.settings.gameId === "hangman" ? (
 				<HangmanGame />
+			) : room.settings.gameId === "mafia" ? (
+				<MafiaGame />
 			) : room.settings.gameId === "perudo" ? (
 				<PerudoGame />
 			) : (

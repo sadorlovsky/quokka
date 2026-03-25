@@ -43,7 +43,13 @@ export const GAME_META: Record<
 			"Блефуйте и разоблачайте блеф! Делайте ставки на количество кубиков, скрытых под стаканами.",
 		players: "2–6",
 	},
-	mafia: { emoji: "🔫", name: "Мафия", comingSoon: true },
+	mafia: {
+		emoji: "🔫",
+		name: "Мафия",
+		description:
+			"Город засыпает. Просыпается мафия... Найдите мафиози среди мирных жителей, пока они не захватили город.",
+		players: "6–16",
+	},
 	trivia: { emoji: "❓", name: "Викторина", comingSoon: true },
 	codenames: { emoji: "🕵️", name: "Codenames", comingSoon: true },
 	battleship: { emoji: "🚢", name: "Морской бой", comingSoon: true },

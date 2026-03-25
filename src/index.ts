@@ -1,6 +1,7 @@
 import index from "./index.html";
 import { crocodilePlugin } from "./server/games/plugins/crocodile/plugin";
 import { hangmanPlugin } from "./server/games/plugins/hangman/plugin";
+import { mafiaPlugin } from "./server/games/plugins/mafia/plugin";
 import { perudoPlugin } from "./server/games/plugins/perudo/plugin";
 import { tapewormPlugin } from "./server/games/plugins/tapeworm/plugin";
 import { wordGuessPlugin } from "./server/games/plugins/word-guess/plugin";
@@ -20,6 +21,7 @@ registerPlugin(tapewormPlugin);
 registerPlugin(crocodilePlugin);
 registerPlugin(hangmanPlugin);
 registerPlugin(perudoPlugin);
+registerPlugin(mafiaPlugin);
 
 // Restore persisted state
 import { restoreGame } from "./server/games/engine";

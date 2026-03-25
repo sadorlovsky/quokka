@@ -91,6 +91,19 @@ function sanitizeGameConfig(
 		if ("textMode" in config) {
 			sanitized.textMode = config.textMode === true;
 		}
+	} else if (gameId === "mafia") {
+		if ("discussionTimeSeconds" in config) {
+			sanitized.discussionTimeSeconds = clamp(config.discussionTimeSeconds, 60, 120, 90);
+		}
+		if ("revealRoleOnDeath" in config) {
+			sanitized.revealRoleOnDeath = config.revealRoleOnDeath !== false;
+		}
+		if ("doctorSelfHeal" in config) {
+			sanitized.doctorSelfHeal = config.doctorSelfHeal === true;
+		}
+		if ("anonymousVoting" in config) {
+			sanitized.anonymousVoting = config.anonymousVoting === true;
+		}
 	} else if (gameId === "hangman") {
 		// No config options — rounds are auto-calculated from player count
 	} else {

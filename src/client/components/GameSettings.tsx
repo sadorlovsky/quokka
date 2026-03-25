@@ -3,6 +3,8 @@ import "./GameSettings.css";
 import { getRecommendedSettings } from "@/shared/game-settings";
 import type { CrocodileConfig } from "@/shared/types/crocodile";
 import { DEFAULT_CROCODILE_CONFIG } from "@/shared/types/crocodile";
+import type { MafiaConfig } from "@/shared/types/mafia";
+import { DEFAULT_MAFIA_CONFIG } from "@/shared/types/mafia";
 import type { PerudoConfig } from "@/shared/types/perudo";
 import { DEFAULT_PERUDO_CONFIG } from "@/shared/types/perudo";
 
@@ -390,6 +392,136 @@ function PerudoSettings({
 	);
 }
 
+function MafiaSettings({
+	isHost,
+	playerCount,
+	onUpdate,
+	gameConfig,
+	children,
+}: {
+	isHost: boolean;
+	playerCount: number;
+	onUpdate: (settings: Partial<RoomSettings>) => void;
+	gameConfig: Record<string, unknown> | undefined;
+	children?: ReactNode;
+}) {
+	const config = {
+		...DEFAULT_MAFIA_CONFIG,
+		...gameConfig,
+	} as MafiaConfig;
+
+	const updateConfig = useCallback(
+		(patch: Partial<MafiaConfig>) => {
+			onUpdate({
+				gameConfig: { ...config, ...patch },
+			});
+		},
+		[onUpdate, config],
+	);
+
+	const mafiaCount = playerCount <= 7 ? 2 : playerCount <= 10 ? 3 : playerCount <= 13 ? 4 : 5;
+	const hasDoctor = playerCount >= 7;
+
+	if (!isHost) {
+		return (
+			<div className="game-settings">
+				<p className="settings-summary">
+					{mafiaCount} мафиози · комиссар{hasDoctor ? " · доктор" : ""} · обсуждение{" "}
+					{config.discussionTimeSeconds} сек
+				</p>
+				<p className="settings-summary">Найдите мафию среди мирных жителей</p>
+				{children}
+			</div>
+		);
+	}
+
+	return (
+		<div className="game-settings">
+			<h3 className="settings-title">Настройки игры</h3>
+
+			<div className="settings-group">
+				<span className="settings-label">Время обсуждения</span>
+				<div className="settings-options">
+					{[
+						{ value: 60, label: "1 мин" },
+						{ value: 90, label: "1.5 мин" },
+						{ value: 120, label: "2 мин" },
+					].map(({ value, label }) => (
+						<button
+							key={value}
+							className={`settings-option${config.discussionTimeSeconds === value ? " settings-option--active" : ""}`}
+							onClick={() => updateConfig({ discussionTimeSeconds: value })}
+						>
+							{label}
+						</button>
+					))}
+				</div>
+			</div>
+
+			<div className="settings-group">
+				<span className="settings-label">Показывать роль при смерти</span>
+				<div className="settings-options">
+					<button
+						className={`settings-option${config.revealRoleOnDeath ? " settings-option--active" : ""}`}
+						onClick={() => updateConfig({ revealRoleOnDeath: true })}
+					>
+						Да
+					</button>
+					<button
+						className={`settings-option${!config.revealRoleOnDeath ? " settings-option--active" : ""}`}
+						onClick={() => updateConfig({ revealRoleOnDeath: false })}
+					>
+						Нет
+					</button>
+				</div>
+			</div>
+
+			<div className="settings-group">
+				<span className="settings-label">Голосование</span>
+				<div className="settings-options">
+					<button
+						className={`settings-option${!config.anonymousVoting ? " settings-option--active" : ""}`}
+						onClick={() => updateConfig({ anonymousVoting: false })}
+					>
+						Открытое
+					</button>
+					<button
+						className={`settings-option${config.anonymousVoting ? " settings-option--active" : ""}`}
+						onClick={() => updateConfig({ anonymousVoting: true })}
+					>
+						Тайное
+					</button>
+				</div>
+			</div>
+
+			<div className="settings-group">
+				<span className="settings-label">Доктор лечит себя</span>
+				<div className="settings-options">
+					<button
+						className={`settings-option${!config.doctorSelfHeal ? " settings-option--active" : ""}`}
+						onClick={() => updateConfig({ doctorSelfHeal: false })}
+					>
+						Нет
+					</button>
+					<button
+						className={`settings-option${config.doctorSelfHeal ? " settings-option--active" : ""}`}
+						onClick={() => updateConfig({ doctorSelfHeal: true })}
+					>
+						Да
+					</button>
+				</div>
+			</div>
+
+			<p className="settings-summary">
+				{mafiaCount} мафиози · комиссар{hasDoctor ? " · доктор" : ""} ·{" "}
+				{playerCount - mafiaCount - 1 - (hasDoctor ? 1 : 0)} мирных
+			</p>
+
+			{children}
+		</div>
+	);
+}
+
 function HangmanSettings({
 	playerCount,
 	children,
@@ -447,6 +579,19 @@ export function GameSettings({
 			>
 				{children}
 			</PerudoSettings>
+		);
+	}
+
+	if (settings.gameId === "mafia") {
+		return (
+			<MafiaSettings
+				isHost={isHost}
+				playerCount={playerCount}
+				onUpdate={onUpdate}
+				gameConfig={settings.gameConfig}
+			>
+				{children}
+			</MafiaSettings>
 		);
 	}
 
