@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "server",
+  "dolt_database": "fishka",
+  "project_id": "4be50318-5f1d-4f7a-9751-9a31b9303c8b"
+}
