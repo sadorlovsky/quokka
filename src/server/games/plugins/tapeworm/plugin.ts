@@ -536,7 +536,7 @@ function afterDiscard(state: TapewormState, playerId: string): TapewormState {
 
 export const tapewormPlugin: GamePlugin<TapewormState, TapewormAction, TapewormConfig> = {
 	id: "tapeworm",
-	name: "Червяк",
+	name: "Червь",
 	minPlayers: 2,
 	maxPlayers: 4,
 	defaultConfig: DEFAULT_TAPEWORM_CONFIG,

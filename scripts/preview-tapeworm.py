@@ -26,7 +26,7 @@ def select_tapeworm(page):
     count = logos.count()
     for i in range(count):
         item = logos.nth(i)
-        if "Червяк" in (item.text_content() or ""):
+        if "Червь" in (item.text_content() or ""):
             item.locator("button").click()
             return
     raise RuntimeError("Tapeworm game not found in selector")

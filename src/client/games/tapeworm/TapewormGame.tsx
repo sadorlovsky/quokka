@@ -618,7 +618,7 @@ function StatusBar({
 				}
 				return null;
 			case "CUT":
-				return isMyProperty ? "Выберите сегмент для разрезания" : `${who} разрезает червяка`;
+				return isMyProperty ? "Выберите сегмент для разрезания" : `${who} разрезает червя`;
 			default:
 				return null;
 		}

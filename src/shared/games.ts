@@ -17,7 +17,7 @@ export const GAME_META: Record<
 	},
 	tapeworm: {
 		emoji: "🪱",
-		name: "Червяк",
+		name: "Червь",
 		description:
 			"Составляйте слова из букв на игровом поле, соединяя их в цепочку. Чем длиннее слово — тем больше очков.",
 		players: "2–8",

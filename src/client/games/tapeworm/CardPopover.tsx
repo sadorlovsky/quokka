@@ -23,7 +23,7 @@ const TRAIT_DESCRIPTIONS: Record<DescribedTrait, { icon: string; name: string; d
 	CUT: {
 		icon: "✂️",
 		name: "Разрезать",
-		desc: "Разрежьте червяка, отсоединённые части удаляются",
+		desc: "Разрежьте червя, отсоединённые части удаляются",
 	},
 };
 
@@ -50,7 +50,7 @@ export function CardPopover({ card, onClose }: CardPopoverProps) {
 						<div>
 							<div className="tapeworm-popover-trait">Нож</div>
 							<div className="tapeworm-popover-text">
-								Разрежьте червяка, отсоединённые части удаляются
+								Разрежьте червя, отсоединённые части удаляются
 							</div>
 						</div>
 					</div>
