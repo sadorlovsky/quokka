@@ -40,7 +40,7 @@ export function LobbyChat() {
 					type="text"
 					value={text}
 					onChange={(e) => setText(e.target.value)}
-					placeholder="Сообщение..."
+					placeholder="Написать в чат"
 					maxLength={200}
 					autoComplete="off"
 				/>

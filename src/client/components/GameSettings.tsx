@@ -103,6 +103,18 @@ function WordGuessSettings({
 						className={`settings-option${config.mode === "ffa" ? " settings-option--active" : ""}`}
 						onClick={() => updateConfig({ mode: "ffa" })}
 					>
+						<svg
+							aria-hidden="true"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+							<circle cx="12" cy="7" r="4" />
+						</svg>
 						Каждый за себя
 					</button>
 					<button
@@ -111,6 +123,20 @@ function WordGuessSettings({
 						disabled={playerCount < 4}
 						title={playerCount < 4 ? "Нужно минимум 4 игрока" : undefined}
 					>
+						<svg
+							aria-hidden="true"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+							<circle cx="9" cy="7" r="4" />
+							<path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+							<path d="M16 3.13a4 4 0 0 1 0 7.75" />
+						</svg>
 						Команды
 					</button>
 				</div>
@@ -121,17 +147,88 @@ function WordGuessSettings({
 				<div className="settings-options">
 					{(
 						[
-							{ value: "all" as const, label: "Любые" },
-							{ value: 1 as const, label: "Лёгкие" },
-							{ value: 2 as const, label: "Средние" },
-							{ value: 3 as const, label: "Сложные" },
+							{
+								value: "all" as const,
+								label: "Любые",
+								icon: (
+									<svg
+										aria-hidden="true"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+									>
+										<path d="M16 3h5v5" />
+										<path d="M8 3H3v5" />
+										<path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3" />
+										<path d="m15 9 6-6" />
+									</svg>
+								),
+							},
+							{
+								value: 1 as const,
+								label: "Лёгкие",
+								icon: (
+									<svg
+										aria-hidden="true"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+									>
+										<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+									</svg>
+								),
+							},
+							{
+								value: 2 as const,
+								label: "Средние",
+								icon: (
+									<svg
+										aria-hidden="true"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+									>
+										<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+										<line x1="2" y1="2" x2="22" y2="22" />
+									</svg>
+								),
+							},
+							{
+								value: 3 as const,
+								label: "Сложные",
+								icon: (
+									<svg
+										aria-hidden="true"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+									>
+										<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
+										<path d="M20 3v4" />
+										<path d="M22 5h-4" />
+									</svg>
+								),
+							},
 						] as const
-					).map(({ value, label }) => (
+					).map(({ value, label, icon }) => (
 						<button
 							key={String(value)}
 							className={`settings-option${config.difficulty === value ? " settings-option--active" : ""}`}
 							onClick={() => updateConfig({ difficulty: value })}
 						>
+							{icon}
 							{label}
 						</button>
 					))}
@@ -145,12 +242,44 @@ function WordGuessSettings({
 						className={`settings-option${!config.textMode ? " settings-option--active" : ""}`}
 						onClick={() => updateConfig({ textMode: false })}
 					>
+						<svg
+							aria-hidden="true"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+							<path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+							<line x1="12" y1="19" x2="12" y2="22" />
+						</svg>
 						Голосом
 					</button>
 					<button
 						className={`settings-option${config.textMode ? " settings-option--active" : ""}`}
 						onClick={() => updateConfig({ textMode: true })}
 					>
+						<svg
+							aria-hidden="true"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							<rect width="20" height="16" x="2" y="4" rx="2" />
+							<path d="M6 8h.001" />
+							<path d="M10 8h.001" />
+							<path d="M14 8h.001" />
+							<path d="M18 8h.001" />
+							<path d="M8 12h.001" />
+							<path d="M12 12h.001" />
+							<path d="M16 12h.001" />
+							<path d="M7 16h10" />
+						</svg>
 						Текстом
 					</button>
 				</div>
@@ -234,12 +363,38 @@ function CrocodileSettings({
 						className={`settings-option${config.mode === "gestures" ? " settings-option--active" : ""}`}
 						onClick={() => updateConfig({ mode: "gestures", roundTimeSeconds: 60 })}
 					>
+						<svg
+							aria-hidden="true"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							<path d="M18 11V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2" />
+							<path d="M14 10V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v2" />
+							<path d="M10 10.5V6a2 2 0 0 0-2-2a2 2 0 0 0-2 2v8" />
+							<path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15" />
+						</svg>
 						Жесты
 					</button>
 					<button
 						className={`settings-option${config.mode === "drawing" ? " settings-option--active" : ""}`}
 						onClick={() => updateConfig({ mode: "drawing", roundTimeSeconds: 120 })}
 					>
+						<svg
+							aria-hidden="true"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							<path d="m9.06 11.9 8.07-8.06a2.85 2.85 0 1 1 4.03 4.03l-8.06 8.08" />
+							<path d="M7.07 14.94c-1.66 0-3 1.35-3 3.02 0 1.33-2.5 1.52-2 2.02 1.08 1.1 2.49 2.02 4 2.02 2.2 0 4-1.8 4-4.04a3.01 3.01 0 0 0-3-3.02z" />
+						</svg>
 						Рисование
 					</button>
 				</div>
@@ -250,17 +405,88 @@ function CrocodileSettings({
 				<div className="settings-options">
 					{(
 						[
-							{ value: "all" as const, label: "Любые" },
-							{ value: 1 as const, label: "Лёгкие" },
-							{ value: 2 as const, label: "Средние" },
-							{ value: 3 as const, label: "Сложные" },
+							{
+								value: "all" as const,
+								label: "Любые",
+								icon: (
+									<svg
+										aria-hidden="true"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+									>
+										<path d="M16 3h5v5" />
+										<path d="M8 3H3v5" />
+										<path d="M12 22v-8.3a4 4 0 0 0-1.172-2.872L3 3" />
+										<path d="m15 9 6-6" />
+									</svg>
+								),
+							},
+							{
+								value: 1 as const,
+								label: "Лёгкие",
+								icon: (
+									<svg
+										aria-hidden="true"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+									>
+										<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+									</svg>
+								),
+							},
+							{
+								value: 2 as const,
+								label: "Средние",
+								icon: (
+									<svg
+										aria-hidden="true"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+									>
+										<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+										<line x1="2" y1="2" x2="22" y2="22" />
+									</svg>
+								),
+							},
+							{
+								value: 3 as const,
+								label: "Сложные",
+								icon: (
+									<svg
+										aria-hidden="true"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+										strokeLinecap="round"
+										strokeLinejoin="round"
+									>
+										<path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z" />
+										<path d="M20 3v4" />
+										<path d="M22 5h-4" />
+									</svg>
+								),
+							},
 						] as const
-					).map(({ value, label }) => (
+					).map(({ value, label, icon }) => (
 						<button
 							key={String(value)}
 							className={`settings-option${config.difficulty === value ? " settings-option--active" : ""}`}
 							onClick={() => updateConfig({ difficulty: value })}
 						>
+							{icon}
 							{label}
 						</button>
 					))}
@@ -274,12 +500,44 @@ function CrocodileSettings({
 						className={`settings-option${!config.textMode ? " settings-option--active" : ""}`}
 						onClick={() => updateConfig({ textMode: false })}
 					>
+						<svg
+							aria-hidden="true"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+							<path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+							<line x1="12" y1="19" x2="12" y2="22" />
+						</svg>
 						Голосом
 					</button>
 					<button
 						className={`settings-option${config.textMode ? " settings-option--active" : ""}`}
 						onClick={() => updateConfig({ textMode: true })}
 					>
+						<svg
+							aria-hidden="true"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							<rect width="20" height="16" x="2" y="4" rx="2" />
+							<path d="M6 8h.001" />
+							<path d="M10 8h.001" />
+							<path d="M14 8h.001" />
+							<path d="M18 8h.001" />
+							<path d="M8 12h.001" />
+							<path d="M12 12h.001" />
+							<path d="M16 12h.001" />
+							<path d="M7 16h10" />
+						</svg>
 						Текстом
 					</button>
 				</div>
@@ -355,12 +613,35 @@ function PerudoSettings({
 						className={`settings-option${config.palifico ? " settings-option--active" : ""}`}
 						onClick={() => updateConfig({ palifico: true })}
 					>
+						<svg
+							aria-hidden="true"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							<polyline points="20 6 9 17 4 12" />
+						</svg>
 						Включено
 					</button>
 					<button
 						className={`settings-option${!config.palifico ? " settings-option--active" : ""}`}
 						onClick={() => updateConfig({ palifico: false })}
 					>
+						<svg
+							aria-hidden="true"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							<path d="M18 6 6 18" />
+							<path d="m6 6 12 12" />
+						</svg>
 						Выключено
 					</button>
 				</div>
@@ -379,6 +660,18 @@ function PerudoSettings({
 							className={`settings-option${config.turnTimeSeconds === value ? " settings-option--active" : ""}`}
 							onClick={() => updateConfig({ turnTimeSeconds: value })}
 						>
+							<svg
+								aria-hidden="true"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							>
+								<circle cx="12" cy="12" r="10" />
+								<polyline points="12 6 12 12 16 14" />
+							</svg>
 							{label}
 						</button>
 					))}
@@ -452,6 +745,18 @@ function MafiaSettings({
 							className={`settings-option${config.discussionTimeSeconds === value ? " settings-option--active" : ""}`}
 							onClick={() => updateConfig({ discussionTimeSeconds: value })}
 						>
+							<svg
+								aria-hidden="true"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							>
+								<circle cx="12" cy="12" r="10" />
+								<polyline points="12 6 12 12 16 14" />
+							</svg>
 							{label}
 						</button>
 					))}
@@ -465,12 +770,38 @@ function MafiaSettings({
 						className={`settings-option${config.revealRoleOnDeath ? " settings-option--active" : ""}`}
 						onClick={() => updateConfig({ revealRoleOnDeath: true })}
 					>
+						<svg
+							aria-hidden="true"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+							<circle cx="12" cy="12" r="3" />
+						</svg>
 						Да
 					</button>
 					<button
 						className={`settings-option${!config.revealRoleOnDeath ? " settings-option--active" : ""}`}
 						onClick={() => updateConfig({ revealRoleOnDeath: false })}
 					>
+						<svg
+							aria-hidden="true"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+							<path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+							<path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+							<line x1="2" y1="2" x2="22" y2="22" />
+						</svg>
 						Нет
 					</button>
 				</div>
@@ -483,12 +814,38 @@ function MafiaSettings({
 						className={`settings-option${!config.anonymousVoting ? " settings-option--active" : ""}`}
 						onClick={() => updateConfig({ anonymousVoting: false })}
 					>
+						<svg
+							aria-hidden="true"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							<path d="M11 12h2" />
+							<path d="M5.5 8.5 9 12l-3.5 3.5" />
+							<path d="m15 5.5 3.5 3.5L15 12.5" />
+							<rect width="20" height="20" x="2" y="2" rx="5" />
+						</svg>
 						Открытое
 					</button>
 					<button
 						className={`settings-option${config.anonymousVoting ? " settings-option--active" : ""}`}
 						onClick={() => updateConfig({ anonymousVoting: true })}
 					>
+						<svg
+							aria-hidden="true"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							<rect width="18" height="11" x="3" y="11" rx="2" ry="2" />
+							<path d="M7 11V7a5 5 0 0 1 10 0v4" />
+						</svg>
 						Тайное
 					</button>
 				</div>
@@ -501,12 +858,38 @@ function MafiaSettings({
 						className={`settings-option${!config.doctorSelfHeal ? " settings-option--active" : ""}`}
 						onClick={() => updateConfig({ doctorSelfHeal: false })}
 					>
+						<svg
+							aria-hidden="true"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							<path d="M18 6 6 18" />
+							<path d="m6 6 12 12" />
+						</svg>
 						Нет
 					</button>
 					<button
 						className={`settings-option${config.doctorSelfHeal ? " settings-option--active" : ""}`}
 						onClick={() => updateConfig({ doctorSelfHeal: true })}
 					>
+						<svg
+							aria-hidden="true"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
+							<path d="M12 5 9.04 7.96a2.17 2.17 0 0 0 0 3.08c.82.82 2.13.85 3 .07l2.07-1.9a2.82 2.82 0 0 1 3.79 0l2.96 2.66" />
+							<path d="m18 15-2-2" />
+							<path d="m15 18-2-2" />
+						</svg>
 						Да
 					</button>
 				</div>

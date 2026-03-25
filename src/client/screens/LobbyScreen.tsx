@@ -133,7 +133,7 @@ export function LobbyScreen() {
 
 	return (
 		<div className="screen lobby-screen">
-			{/* Top bar: back button + room code */}
+			{/* Top bar: back button + hero + room code */}
 			<div className="lobby-topbar">
 				<button type="button" className="lobby-back" onClick={handleLeave}>
 					<svg
@@ -152,6 +152,13 @@ export function LobbyScreen() {
 					</svg>
 					<span>Выйти</span>
 				</button>
+
+				<div className="lobby-hero">
+					<span className="lobby-hero-emoji">{gameMeta?.emoji}</span>
+					<span className="lobby-hero-title">Fishka</span>
+					<span className="lobby-hero-separator">·</span>
+					<span className="lobby-hero-name">{gameMeta?.name}</span>
+				</div>
 
 				<button
 					type="button"
@@ -198,18 +205,10 @@ export function LobbyScreen() {
 				</button>
 			</div>
 
-			{/* Brand + game hero */}
-			<div className="lobby-hero">
-				<span className="lobby-hero-title">Fishka</span>
-				<div className="lobby-hero-game">
-					<span className="lobby-hero-emoji">{gameMeta?.emoji}</span>
-					<span className="lobby-hero-name">{gameMeta?.name}</span>
-				</div>
-			</div>
-
 			{/* Content: players + settings */}
 			<div className="lobby-columns">
 				<section className="lobby-col-players" aria-label="Игроки">
+					<h3 className="settings-title">Игроки</h3>
 					<PlayerRoster
 						players={room.players}
 						currentPlayerId={playerId}

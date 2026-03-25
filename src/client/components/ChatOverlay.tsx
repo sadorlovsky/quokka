@@ -52,7 +52,7 @@ export function ChatOverlay() {
 						value={text}
 						onChange={(e) => setText(e.target.value)}
 						onBlur={handleBlur}
-						placeholder="Сообщение..."
+						placeholder="Написать в чат"
 						maxLength={200}
 						autoComplete="off"
 					/>
