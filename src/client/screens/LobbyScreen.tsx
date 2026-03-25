@@ -131,16 +131,17 @@ export function LobbyScreen() {
 	const gameMeta = GAME_META[room.settings.gameId];
 
 	return (
-		<div className="screen">
-			<div className="lobby-header">
-				<button type="button" className="lobby-back" onClick={handleLeave} title="Выйти">
+		<div className="screen lobby-screen">
+			{/* Top bar: back button + room code */}
+			<div className="lobby-topbar">
+				<button type="button" className="lobby-back" onClick={handleLeave}>
 					<svg
-						width="20"
-						height="20"
+						width="16"
+						height="16"
 						viewBox="0 0 24 24"
 						fill="none"
 						stroke="currentColor"
-						strokeWidth="2"
+						strokeWidth="2.5"
 						strokeLinecap="round"
 						strokeLinejoin="round"
 					>
@@ -148,42 +149,94 @@ export function LobbyScreen() {
 						<path d="M19 12H5" />
 						<path d="M12 19l-7-7 7-7" />
 					</svg>
+					<span>Выйти</span>
 				</button>
-				<div className="lobby-game-logo">
-					<span className="game-logo game-logo--selected">
-						<span className="game-logo-emoji">{gameMeta?.emoji}</span>
-						<span className="game-logo-label">{gameMeta?.name}</span>
-					</span>
-				</div>
-				<div
-					className={`room-code${codeCopied ? " copied" : ""}`}
+
+				<button
+					type="button"
+					className={`lobby-room-code${codeCopied ? " lobby-room-code--copied" : ""}`}
 					onClick={copyFromCode}
 					title="Нажмите, чтобы скопировать ссылку"
 				>
-					<span className="room-code-label">{codeCopied ? "Ссылка скопирована!" : "Комната"}</span>
-					<span className="room-code-value">{room.code}</span>
+					{codeCopied ? (
+						<>
+							<svg
+								width="14"
+								height="14"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2.5"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							>
+								<title>Скопировано</title>
+								<path d="M20 6L9 17l-5-5" />
+							</svg>
+							<span className="lobby-room-code-toast">Скопировано</span>
+						</>
+					) : (
+						<>
+							<span className="lobby-room-code-value">{room.code}</span>
+							<svg
+								width="14"
+								height="14"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							>
+								<title>Скопировать</title>
+								<rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+								<path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+							</svg>
+						</>
+					)}
+				</button>
+			</div>
+
+			{/* Brand + game hero */}
+			<div className="lobby-hero">
+				<span className="lobby-hero-title">Fishka</span>
+				<div className="lobby-hero-game">
+					<span className="lobby-hero-emoji">{gameMeta?.emoji}</span>
+					<span className="lobby-hero-name">{gameMeta?.name}</span>
 				</div>
 			</div>
 
-			<PlayerRoster
-				players={room.players}
-				currentPlayerId={playerId}
-				mode={rosterMode}
-				teams={teams}
-				isHost={isHost}
-				onUpdateTeams={handleUpdateTeams}
-				onSwitchTeam={(teamId) => send({ type: "switchTeam", teamId })}
-				onKick={
-					isHost ? (targetPlayerId) => send({ type: "kickPlayer", targetPlayerId }) : undefined
-				}
-			/>
+			{/* Content: players + settings */}
+			<div className="lobby-columns">
+				<section className="lobby-col-players" aria-label="Игроки">
+					<PlayerRoster
+						players={room.players}
+						currentPlayerId={playerId}
+						mode={rosterMode}
+						teams={teams}
+						isHost={isHost}
+						onUpdateTeams={handleUpdateTeams}
+						onSwitchTeam={(teamId) => send({ type: "switchTeam", teamId })}
+						onKick={
+							isHost
+								? (targetPlayerId) => send({ type: "kickPlayer", targetPlayerId })
+								: undefined
+						}
+					/>
+				</section>
 
-			<GameSettings
-				settings={room.settings}
-				isHost={isHost}
-				playerCount={room.players.length}
-				onUpdate={handleSettingsChange}
-			>
+				<section className="lobby-col-settings" aria-label="Настройки">
+					<GameSettings
+						settings={room.settings}
+						isHost={isHost}
+						playerCount={room.players.length}
+						onUpdate={handleSettingsChange}
+					/>
+				</section>
+			</div>
+
+			{/* Start button pinned to bottom */}
+			<div className="lobby-actions">
 				{isHost ? (
 					<button className="btn btn-primary" disabled={!canStartFinal} onClick={handleStart}>
 						{room.players.length < 2
@@ -212,7 +265,7 @@ export function LobbyScreen() {
 						</p>
 					</div>
 				)}
-			</GameSettings>
+			</div>
 		</div>
 	);
 }

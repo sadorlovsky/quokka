@@ -2,83 +2,191 @@
    Lobby Screen
    ============================================= */
 
-.lobby-header {
+.lobby-screen {
+	gap: 1.25rem;
+}
+
+/* =============================================
+   Top bar: back + room code
+   ============================================= */
+
+.lobby-topbar {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
 }
 
 .lobby-back {
-	display: flex;
+	display: inline-flex;
 	align-items: center;
-	justify-content: center;
-	width: 2.25rem;
-	height: 2.25rem;
-	border-radius: var(--radius-sm);
+	gap: 0.375rem;
+	padding: 0.375rem 0.75rem;
+	background: none;
 	border: 1.5px solid var(--color-border);
-	background: var(--color-surface);
+	border-radius: var(--radius-pill);
 	color: var(--color-text-muted);
+	font-size: 0.8125rem;
+	font-weight: 700;
 	cursor: pointer;
 	transition:
 		background 0.15s,
 		color 0.15s,
 		border-color 0.15s;
-	flex-shrink: 0;
 
 	&:hover {
 		background: var(--color-surface-hover);
 		color: var(--color-text);
 		border-color: var(--color-text-muted);
 	}
+
+	&:active {
+		transform: scale(0.96);
+	}
 }
 
-.lobby-game-logo {
-	position: absolute;
-	left: 50%;
-	transform: translateX(-50%);
-}
+/* Room code button */
 
-.room-code {
-	display: flex;
+.lobby-room-code {
+	display: inline-flex;
 	align-items: center;
 	gap: 0.5rem;
-	cursor: pointer;
 	padding: 0.375rem 0.75rem;
 	background: var(--color-surface);
 	border: 1.5px solid var(--color-border);
-	border-radius: var(--radius-sm);
+	border-radius: var(--radius-pill);
+	cursor: pointer;
 	transition:
-		background-color 0.15s,
-		border-color 0.15s;
+		background 0.15s,
+		border-color 0.15s,
+		box-shadow 0.15s;
+
+	&:hover {
+		background: var(--color-surface-hover);
+		border-color: var(--color-primary);
+		box-shadow: 0 0 0 3px var(--color-primary-glow);
+	}
+
+	&:active {
+		transform: scale(0.96);
+	}
 }
 
-.room-code:hover {
-	background: var(--color-surface-hover);
-	border-color: var(--color-primary);
+.lobby-room-code--copied {
+	border-color: var(--color-success);
+	background: var(--color-success-dim);
+
+	&:hover {
+		border-color: var(--color-success);
+		box-shadow: 0 0 0 3px rgba(93, 217, 122, 0.12);
+	}
 }
 
-.room-code.copied {
-	border-color: var(--color-success, #4ade80);
+.lobby-room-code--copied svg {
+	color: var(--color-success);
 }
 
-.room-code.copied .room-code-label {
-	color: var(--color-success, #4ade80);
-}
-
-.room-code-label {
-	font-size: 0.6875rem;
-	font-weight: 600;
-	color: var(--color-text-muted);
-	text-transform: uppercase;
-	letter-spacing: 0.08em;
-}
-
-.room-code-value {
+.lobby-room-code-value {
 	font-family: var(--font-mono);
-	font-size: 1.125rem;
+	font-size: 0.9375rem;
 	font-weight: 700;
 	letter-spacing: 0.15em;
 	color: var(--color-primary);
+}
+
+.lobby-room-code-toast {
+	font-size: 0.8125rem;
+	font-weight: 700;
+	color: var(--color-success);
+	animation: lobby-toast-in 0.2s ease-out;
+}
+
+@keyframes lobby-toast-in {
+	from {
+		opacity: 0;
+		transform: translateY(2px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* =============================================
+   Hero: brand + game
+   ============================================= */
+
+.lobby-hero {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.625rem;
+	padding: 0.5rem 0;
+}
+
+.lobby-hero-title {
+	font-size: 1.5rem;
+	font-weight: 900;
+	letter-spacing: -0.03em;
+	background: linear-gradient(135deg, var(--color-text) 30%, var(--color-primary) 100%);
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	background-clip: text;
+	line-height: 1.1;
+}
+
+.lobby-hero-game {
+	display: flex;
+	align-items: center;
+	gap: 0.625rem;
+	padding: 0.5rem 1rem;
+	background: linear-gradient(
+		135deg,
+		rgba(240, 160, 48, 0.1) 0%,
+		rgba(180, 100, 255, 0.06) 100%
+	);
+	border: 1.5px solid rgba(240, 160, 48, 0.2);
+	border-radius: var(--radius-md);
+	box-shadow:
+		0 4px 16px rgba(240, 160, 48, 0.06),
+		inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.lobby-hero-emoji {
+	font-size: 1.5rem;
+	line-height: 1;
+}
+
+.lobby-hero-name {
+	font-size: 1.125rem;
+	font-weight: 800;
+	letter-spacing: -0.01em;
+	color: var(--color-text);
+}
+
+/* =============================================
+   Columns: players + settings
+   ============================================= */
+
+.lobby-columns {
+	display: contents;
+}
+
+.lobby-col-players {
+	width: 100%;
+}
+
+.lobby-col-settings {
+	width: 100%;
+}
+
+/* =============================================
+   Actions — pinned to bottom
+   ============================================= */
+
+.lobby-actions {
+	margin-top: auto;
+	padding-top: 1rem;
+	width: 100%;
 }
 
 /* =============================================
@@ -141,7 +249,7 @@
 }
 
 /* =============================================
-   Game Badge
+   Game Badge (used in GameScreen)
    ============================================= */
 
 .game-badge {
@@ -225,4 +333,34 @@
 	font-weight: 700;
 	color: var(--color-text);
 	letter-spacing: -0.01em;
+}
+
+/* =============================================
+   Desktop: multi-column layout (≥1024px)
+   ============================================= */
+
+@media (min-width: 1024px) {
+	.lobby-screen {
+		gap: 1.5rem;
+		padding-top: 1rem;
+	}
+
+	.lobby-columns {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1.5rem;
+		align-items: start;
+		width: 100%;
+	}
+
+	.lobby-col-players,
+	.lobby-col-settings {
+		width: auto;
+	}
+
+	.lobby-actions {
+		max-width: 400px;
+		margin-left: auto;
+		margin-right: auto;
+	}
 }
