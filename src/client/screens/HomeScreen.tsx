@@ -98,6 +98,7 @@ export function HomeScreen() {
 									/>
 								</div>
 							</div>
+							<p className="player-identity-hint">Можно изменить в любой момент</p>
 						</section>
 
 						{/* Center column: Game selector */}

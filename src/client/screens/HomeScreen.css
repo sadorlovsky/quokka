@@ -125,6 +125,15 @@
 	box-shadow: none;
 }
 
+.player-identity-hint {
+	font-size: 0.6875rem;
+	font-weight: 500;
+	color: var(--color-text-muted);
+	opacity: 0.6;
+	text-align: center;
+	margin-top: 0.25rem;
+}
+
 /* =============================================
    Game grid — card tiles
    ============================================= */
@@ -164,7 +173,7 @@
 	outline: none;
 }
 
-.game-tile:hover {
+.game-tile:hover:not(.game-tile--selected) {
 	background: var(--color-surface-hover);
 	border-color: var(--color-surface-raised);
 }
