@@ -243,6 +243,10 @@ const program = myEffect.pipe(
 ```
 
 
+## Git
+
+НИКОГДА не выполняй `git commit`, `git push` или любые другие команды, изменяющие историю git, без явной команды пользователя. Это правило не имеет исключений.
+
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:ca08a54f -->
 ## Beads Issue Tracker
 
