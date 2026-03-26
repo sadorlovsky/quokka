@@ -44,6 +44,10 @@ __pycache__/
 # Preview screenshots
 screenshots/
 
+# WASM/ONNX assets copied from node_modules
+public/vad/
+public/rnnoise/
+
 # Beads / Dolt files (added by bd init)
 .dolt/
 *.db

@@ -25,25 +25,37 @@ export function useVoiceChat() {
 	const [muted, setMuted] = useState(false);
 	const [peers, setPeers] = useState<VoicePeer[]>([]);
 	const [speakingPeerIds, setSpeakingPeerIds] = useState<Set<string>>(new Set());
+	const [serverSpeakingPeerIds, setServerSpeakingPeerIds] = useState<Set<string>>(new Set());
 
 	const localStreamRef = useRef<MediaStream | null>(null);
+	const processedStreamRef = useRef<MediaStream | null>(null);
 	const connectionsRef = useRef<Map<string, PeerConnection>>(new Map());
 	const joinedRef = useRef(false);
 	const audioContextRef = useRef<AudioContext | null>(null);
+	const localSpeakingRef = useRef(false);
+
+	// Remote peer VAD (simple analyser-based — remote audio is already noise-suppressed)
 	const analysersRef = useRef<Map<string, AnalyserNode>>(new Map());
 	const vadIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+	// Silero VAD + RNNoise refs
+	const vadInstanceRef = useRef<{
+		pause: () => Promise<void>;
+		destroy: () => Promise<void>;
+	} | null>(null);
+	const rnnoiseNodeRef = useRef<{ destroy: () => void } | null>(null);
 
 	// Keep ref in sync
 	joinedRef.current = joined;
 
 	const getAudioContext = useCallback(() => {
-		if (!audioContextRef.current) {
-			audioContextRef.current = new AudioContext();
+		if (!audioContextRef.current || audioContextRef.current.state === "closed") {
+			audioContextRef.current = new AudioContext({ sampleRate: 48000 });
 		}
 		return audioContextRef.current;
 	}, []);
 
-	const createAnalyser = useCallback(
+	const createRemoteAnalyser = useCallback(
 		(id: string, stream: MediaStream) => {
 			const ctx = getAudioContext();
 			const source = ctx.createMediaStreamSource(stream);
@@ -68,20 +80,20 @@ export function useVoiceChat() {
 			const audio = new Audio();
 			audio.autoplay = true;
 
-			// Add local tracks
-			const stream = localStreamRef.current;
+			// Add local tracks — use processed (noise-suppressed) stream if available
+			const stream = processedStreamRef.current ?? localStreamRef.current;
 			if (stream) {
 				for (const track of stream.getTracks()) {
 					pc.addTrack(track, stream);
 				}
 			}
 
-			// Receive remote audio + set up VAD analyser
+			// Receive remote audio + set up VAD analyser for remote peers
 			pc.ontrack = (e) => {
 				const remoteStream = e.streams[0] ?? null;
 				audio.srcObject = remoteStream;
 				if (remoteStream) {
-					createAnalyser(peerId, remoteStream);
+					createRemoteAnalyser(peerId, remoteStream);
 				}
 			};
 
@@ -117,7 +129,7 @@ export function useVoiceChat() {
 
 			return pc;
 		},
-		[send, createAnalyser],
+		[send, createRemoteAnalyser],
 	);
 
 	const handleVoiceEvent = useCallback(
@@ -146,6 +158,12 @@ export function useVoiceChat() {
 
 				case "voicePeerLeft": {
 					setPeers((prev) => prev.filter((p) => p.playerId !== event.playerId));
+					setServerSpeakingPeerIds((prev) => {
+						if (!prev.has(event.playerId)) return prev;
+						const next = new Set(prev);
+						next.delete(event.playerId);
+						return next;
+					});
 					analysersRef.current.delete(event.playerId);
 					const conn = connectionsRef.current.get(event.playerId);
 					if (conn) {
@@ -160,6 +178,22 @@ export function useVoiceChat() {
 					setPeers((prev) =>
 						prev.map((p) => (p.playerId === event.playerId ? { ...p, muted: event.muted } : p)),
 					);
+					break;
+				}
+
+				case "voiceSpeakingChanged": {
+					setServerSpeakingPeerIds((prev) => {
+						if (event.speaking) {
+							if (prev.has(event.playerId)) return prev;
+							const next = new Set(prev);
+							next.add(event.playerId);
+							return next;
+						}
+						if (!prev.has(event.playerId)) return prev;
+						const next = new Set(prev);
+						next.delete(event.playerId);
+						return next;
+					});
 					break;
 				}
 
@@ -215,7 +249,7 @@ export function useVoiceChat() {
 		return onVoiceEvent(handleVoiceEvent);
 	}, [onVoiceEvent, handleVoiceEvent]);
 
-	// VAD polling
+	// Remote peer VAD polling (simple threshold — remote audio is already noise-suppressed by sender)
 	useEffect(() => {
 		if (!joined) {
 			return;
@@ -224,29 +258,22 @@ export function useVoiceChat() {
 		const dataArray = new Uint8Array(128);
 
 		vadIntervalRef.current = setInterval(() => {
-			const next = new Set<string>();
+			const remoteSpeaking = new Set<string>();
 
-			// Check local stream (self)
-			const localAnalyser = analysersRef.current.get("__local__");
-			if (localAnalyser && playerId) {
-				localAnalyser.getByteFrequencyData(dataArray);
-				const avg = dataArray.reduce((sum, v) => sum + v, 0) / dataArray.length / 255;
-				if (avg > VAD_THRESHOLD) {
-					next.add(playerId);
-				}
-			}
-
-			// Check remote streams
 			for (const [peerId, analyser] of analysersRef.current) {
-				if (peerId === "__local__") continue;
 				analyser.getByteFrequencyData(dataArray);
 				const avg = dataArray.reduce((sum, v) => sum + v, 0) / dataArray.length / 255;
 				if (avg > VAD_THRESHOLD) {
-					next.add(peerId);
+					remoteSpeaking.add(peerId);
 				}
 			}
 
 			setSpeakingPeerIds((prev) => {
+				// Merge remote speaking with local speaking state
+				const next = new Set(remoteSpeaking);
+				if (playerId && localSpeakingRef.current) {
+					next.add(playerId);
+				}
 				if (prev.size === next.size && [...prev].every((id) => next.has(id))) {
 					return prev;
 				}
@@ -259,7 +286,6 @@ export function useVoiceChat() {
 				clearInterval(vadIntervalRef.current);
 				vadIntervalRef.current = null;
 			}
-			setSpeakingPeerIds(new Set());
 		};
 	}, [joined, playerId]);
 
@@ -271,6 +297,13 @@ export function useVoiceChat() {
 				vadIntervalRef.current = null;
 			}
 			analysersRef.current.clear();
+
+			vadInstanceRef.current?.destroy();
+			vadInstanceRef.current = null;
+
+			rnnoiseNodeRef.current?.destroy();
+			rnnoiseNodeRef.current = null;
+
 			if (audioContextRef.current) {
 				audioContextRef.current.close();
 				audioContextRef.current = null;
@@ -289,27 +322,110 @@ export function useVoiceChat() {
 				}
 				localStreamRef.current = null;
 			}
+			processedStreamRef.current = null;
 		};
 	}, []);
 
 	const join = useCallback(async () => {
 		try {
-			const stream = await navigator.mediaDevices.getUserMedia({
+			const rawStream = await navigator.mediaDevices.getUserMedia({
 				audio: {
 					echoCancellation: true,
-					noiseSuppression: true,
+					noiseSuppression: false, // Disabled — RNNoise handles this
 					autoGainControl: true,
 				},
 			});
-			localStreamRef.current = stream;
-			createAnalyser("__local__", stream);
+			localStreamRef.current = rawStream;
+
+			const ctx = getAudioContext();
+
+			// Set up RNNoise noise suppression pipeline
+			try {
+				const { RnnoiseWorkletNode, loadRnnoise } = await import(
+					"@sapphi-red/web-noise-suppressor"
+				);
+
+				const wasmBinary = await loadRnnoise({
+					url: "/rnnoise/rnnoise.wasm",
+					simdUrl: "/rnnoise/rnnoise_simd.wasm",
+				});
+
+				await ctx.audioWorklet.addModule("/rnnoise/workletProcessor.js");
+
+				const rnnoiseNode = new RnnoiseWorkletNode(ctx, {
+					maxChannels: 1,
+					wasmBinary,
+				});
+				rnnoiseNodeRef.current = rnnoiseNode;
+
+				const source = ctx.createMediaStreamSource(rawStream);
+				const destination = ctx.createMediaStreamDestination();
+				source.connect(rnnoiseNode);
+				rnnoiseNode.connect(destination);
+
+				processedStreamRef.current = destination.stream;
+				console.log("[voice] RNNoise noise suppression enabled");
+			} catch (err) {
+				console.warn("[voice] RNNoise setup failed, using raw audio:", err);
+				processedStreamRef.current = rawStream;
+			}
+
+			// Set up Silero VAD for local speech detection
+			try {
+				const { MicVAD } = await import("@ricky0123/vad-web");
+
+				const currentPlayerId = playerId;
+				const currentSend = send;
+
+				const vad = await MicVAD.new({
+					getStream: () => Promise.resolve(rawStream),
+					positiveSpeechThreshold: 0.8,
+					negativeSpeechThreshold: 0.3,
+					minSpeechFrames: 3,
+					redemptionFrames: 8,
+					startOnLoad: false,
+					baseAssetPath: "/vad/",
+					onnxWASMBasePath: "/vad/",
+					onSpeechStart: () => {
+						if (currentPlayerId) {
+							localSpeakingRef.current = true;
+							setSpeakingPeerIds((prev) => {
+								if (prev.has(currentPlayerId)) return prev;
+								const next = new Set(prev);
+								next.add(currentPlayerId);
+								return next;
+							});
+							currentSend({ type: "voiceSpeaking", speaking: true });
+						}
+					},
+					onSpeechEnd: (_audio: Float32Array) => {
+						if (currentPlayerId) {
+							localSpeakingRef.current = false;
+							setSpeakingPeerIds((prev) => {
+								if (!prev.has(currentPlayerId)) return prev;
+								const next = new Set(prev);
+								next.delete(currentPlayerId);
+								return next;
+							});
+							currentSend({ type: "voiceSpeaking", speaking: false });
+						}
+					},
+				});
+
+				vad.start();
+				vadInstanceRef.current = vad;
+				console.log("[voice] Silero VAD speech detection enabled");
+			} catch (err) {
+				console.warn("[voice] Silero VAD setup failed, no local speech detection:", err);
+			}
+
 			setJoined(true);
 			setMuted(false);
 			send({ type: "voiceJoin" });
 		} catch (err) {
 			console.error("[voice] microphone access denied:", err);
 		}
-	}, [send, createAnalyser]);
+	}, [send, getAudioContext, playerId]);
 
 	const leave = useCallback(() => {
 		// Close all peer connections
@@ -327,8 +443,17 @@ export function useVoiceChat() {
 			}
 			localStreamRef.current = null;
 		}
+		processedStreamRef.current = null;
 
-		// Clean up VAD
+		// Clean up Silero VAD
+		vadInstanceRef.current?.destroy();
+		vadInstanceRef.current = null;
+
+		// Clean up RNNoise
+		rnnoiseNodeRef.current?.destroy();
+		rnnoiseNodeRef.current = null;
+
+		// Clean up remote analysers
 		analysersRef.current.clear();
 		if (audioContextRef.current) {
 			audioContextRef.current.close();
@@ -339,6 +464,7 @@ export function useVoiceChat() {
 		setJoined(false);
 		setMuted(false);
 		setSpeakingPeerIds(new Set());
+		localSpeakingRef.current = false;
 		send({ type: "voiceLeave" });
 	}, [send]);
 
@@ -352,15 +478,35 @@ export function useVoiceChat() {
 		for (const track of stream.getAudioTracks()) {
 			track.enabled = !newMuted;
 		}
+
+		// Pause/resume Silero VAD
+		if (newMuted) {
+			vadInstanceRef.current?.pause();
+			// Clear local speaking state when muting
+			if (playerId) {
+				localSpeakingRef.current = false;
+				setSpeakingPeerIds((prev) => {
+					if (!prev.has(playerId)) return prev;
+					const next = new Set(prev);
+					next.delete(playerId);
+					return next;
+				});
+				send({ type: "voiceSpeaking", speaking: false });
+			}
+		} else {
+			vadInstanceRef.current?.start();
+		}
+
 		setMuted(newMuted);
 		send({ type: "voiceMute", muted: newMuted });
-	}, [muted, send]);
+	}, [muted, send, playerId]);
 
 	return {
 		joined,
 		muted,
 		peers,
 		speakingPeerIds,
+		serverSpeakingPeerIds,
 		join,
 		leave,
 		toggleMute,

@@ -98,6 +98,11 @@ export interface VoiceMuteMessage {
 	muted: boolean;
 }
 
+export interface VoiceSpeakingMessage {
+	type: "voiceSpeaking";
+	speaking: boolean;
+}
+
 export type ClientMessage =
 	| ConnectMessage
 	| CreateRoomMessage
@@ -118,7 +123,8 @@ export type ClientMessage =
 	| VoiceJoinMessage
 	| VoiceLeaveMessage
 	| VoiceSignalMessage
-	| VoiceMuteMessage;
+	| VoiceMuteMessage
+	| VoiceSpeakingMessage;
 
 // --- Server → Client ---
 
@@ -250,6 +256,12 @@ export interface VoiceMuteChangedMessage {
 	muted: boolean;
 }
 
+export interface VoiceSpeakingChangedMessage {
+	type: "voiceSpeakingChanged";
+	playerId: string;
+	speaking: boolean;
+}
+
 export interface VoiceStateMessage {
 	type: "voiceState";
 	peers: { playerId: string; muted: boolean }[];
@@ -289,5 +301,6 @@ export type ServerMessage =
 	| VoicePeerLeftMessage
 	| VoiceSignalRelayMessage
 	| VoiceMuteChangedMessage
+	| VoiceSpeakingChangedMessage
 	| VoiceStateMessage
 	| ErrorMessage;

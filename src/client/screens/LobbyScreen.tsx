@@ -26,7 +26,7 @@ export function LobbyScreen() {
 
 function LobbyScreenInner() {
 	const { room, playerId, send } = useConnection();
-	const { speakingPeerIds, muted, peers, joined } = useVoice();
+	const { speakingPeerIds, serverSpeakingPeerIds, muted, peers, joined } = useVoice();
 	const [codeCopied, setCodeCopied] = useState(false);
 
 	const copyFromCode = useCallback(async () => {
@@ -141,15 +141,22 @@ function LobbyScreenInner() {
 	const rosterMode = gameId === "word-guess" ? (config as WordGuessConfig).mode : "ffa";
 
 	const mutedPeerIds = new Set<string>();
-	if (joined) {
-		for (const peer of peers) {
-			if (peer.muted) {
-				mutedPeerIds.add(peer.playerId);
-			}
+	for (const peer of peers) {
+		if (peer.muted) {
+			mutedPeerIds.add(peer.playerId);
 		}
-		if (muted && playerId) {
-			mutedPeerIds.add(playerId);
-		}
+	}
+	if (joined && muted && playerId) {
+		mutedPeerIds.add(playerId);
+	}
+
+	// Voice participants use local VAD; non-voice observers use server-broadcast speaking state
+	const effectiveSpeakingPeerIds = joined ? speakingPeerIds : serverSpeakingPeerIds;
+
+	// Set of player IDs currently in voice chat (for showing "in voice" indicator)
+	const voicePeerIds = new Set(peers.map((p) => p.playerId));
+	if (joined && playerId) {
+		voicePeerIds.add(playerId);
 	}
 
 	const gameMeta = GAME_META[room.settings.gameId];
@@ -240,8 +247,9 @@ function LobbyScreenInner() {
 						mode={rosterMode}
 						teams={teams}
 						isHost={isHost}
-						speakingPeerIds={speakingPeerIds}
+						speakingPeerIds={effectiveSpeakingPeerIds}
 						mutedPeerIds={mutedPeerIds}
+						voicePeerIds={voicePeerIds}
 						onUpdateTeams={handleUpdateTeams}
 						onSwitchTeam={(teamId) => send({ type: "switchTeam", teamId })}
 						onKick={

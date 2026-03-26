@@ -127,6 +127,9 @@ export function handleMessage(ws: ServerWebSocket<WSData>, raw: string | Buffer)
 			case "voiceMute":
 				handleVoiceMute(ws, msg);
 				break;
+			case "voiceSpeaking":
+				handleVoiceSpeaking(ws, msg);
+				break;
 			default:
 				sendError(ws, ErrorCode.INVALID_MESSAGE, "Unknown message type");
 		}
@@ -919,6 +922,28 @@ function handleVoiceMute(
 		type: "voiceMuteChanged",
 		playerId: player.id,
 		muted: msg.muted,
+	});
+}
+
+function handleVoiceSpeaking(
+	ws: ServerWebSocket<WSData>,
+	msg: Extract<ClientMessage, { type: "voiceSpeaking" }>,
+): void {
+	const player = playerManager.getByWs(ws);
+	if (!player?.roomCode) {
+		return;
+	}
+
+	const peers = voiceRooms.get(player.roomCode);
+	if (!peers?.has(player.id)) {
+		return;
+	}
+
+	// Broadcast speaking state to ALL players in the room (not just voice participants)
+	roomManager.sendToRoomExcept(player.roomCode, player.id, {
+		type: "voiceSpeakingChanged",
+		playerId: player.id,
+		speaking: msg.speaking,
 	});
 }
 

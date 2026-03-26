@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ChatOverlay } from "./components/ChatOverlay";
 import { Layout } from "./components/Layout";
 import { ConnectionProvider, useConnection } from "./contexts/ConnectionContext";
+import { VoiceProvider } from "./contexts/VoiceContext";
 import { GameScreen } from "./screens/GameScreen";
 import { HomeScreen } from "./screens/HomeScreen";
 import { LobbyScreen } from "./screens/LobbyScreen";
@@ -173,10 +174,10 @@ function Router() {
 	}
 	if (room.status === "playing" || room.status === "finished") {
 		return (
-			<>
+			<VoiceProvider>
 				<GameScreen />
 				<ChatOverlay />
-			</>
+			</VoiceProvider>
 		);
 	}
 	return <LobbyScreen />;

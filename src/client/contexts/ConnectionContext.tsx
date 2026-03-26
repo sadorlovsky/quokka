@@ -20,6 +20,7 @@ import type {
 	VoicePeerJoinedMessage,
 	VoicePeerLeftMessage,
 	VoiceSignalRelayMessage,
+	VoiceSpeakingChangedMessage,
 	VoiceStateMessage,
 } from "@/shared/types/protocol";
 import type { RoomState } from "@/shared/types/room";
@@ -36,6 +37,7 @@ export type VoiceEvent =
 	| VoicePeerLeftMessage
 	| VoiceSignalRelayMessage
 	| VoiceMuteChangedMessage
+	| VoiceSpeakingChangedMessage
 	| VoiceStateMessage;
 
 interface ConnectionState {
@@ -211,6 +213,7 @@ export function ConnectionProvider({ children }: { children: ReactNode }) {
 			case "voicePeerLeft":
 			case "voiceSignal":
 			case "voiceMuteChanged":
+			case "voiceSpeakingChanged":
 			case "voiceState":
 				for (const listener of voiceListenersRef.current) {
 					listener(msg);

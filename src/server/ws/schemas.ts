@@ -124,6 +124,11 @@ const VoiceMuteMessage = Schema.Struct({
 	muted: Schema.Boolean,
 });
 
+const VoiceSpeakingMessage = Schema.Struct({
+	type: Schema.Literal("voiceSpeaking"),
+	speaking: Schema.Boolean,
+});
+
 const ClientMessageSchema = Schema.Union(
 	ConnectMessage,
 	HeartbeatMessage,
@@ -145,6 +150,7 @@ const ClientMessageSchema = Schema.Union(
 	VoiceLeaveMessage,
 	VoiceSignalMessage,
 	VoiceMuteMessage,
+	VoiceSpeakingMessage,
 );
 
 const decode = Schema.decodeUnknownEither(ClientMessageSchema);

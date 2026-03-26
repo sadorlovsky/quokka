@@ -103,6 +103,18 @@ const server = Bun.serve({
 				"Cache-Control": "no-cache",
 			},
 		}),
+		"/vad/*": async (req) => {
+			const url = new URL(req.url);
+			const file = Bun.file(`public${url.pathname}`);
+			if (!(await file.exists())) return new Response("Not found", { status: 404 });
+			return new Response(file);
+		},
+		"/rnnoise/*": async (req) => {
+			const url = new URL(req.url);
+			const file = Bun.file(`public${url.pathname}`);
+			if (!(await file.exists())) return new Response("Not found", { status: 404 });
+			return new Response(file);
+		},
 		"/*": index,
 	},
 

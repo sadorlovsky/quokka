@@ -12,7 +12,7 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import type { PlayerInfo } from "@/shared/types/room";
 import { PlayerChip } from "./PlayerChip";
 import "./PlayerRoster.css";
@@ -25,6 +25,7 @@ interface PlayerRosterProps {
 	isHost: boolean;
 	speakingPeerIds?: Set<string>;
 	mutedPeerIds?: Set<string>;
+	voicePeerIds?: Set<string>;
 	onUpdateTeams: (teams: Record<string, string[]>) => void;
 	onSwitchTeam: (teamId: string) => void;
 	onKick?: (playerId: string) => void;
@@ -38,6 +39,7 @@ export function PlayerRoster({
 	isHost,
 	speakingPeerIds,
 	mutedPeerIds,
+	voicePeerIds,
 	onUpdateTeams,
 	onSwitchTeam,
 	onKick,
@@ -56,14 +58,15 @@ export function PlayerRoster({
 							disconnected={!player.isConnected}
 							speaking={speakingPeerIds?.has(player.id)}
 							muted={mutedPeerIds?.has(player.id)}
+							inVoice={voicePeerIds?.has(player.id)}
 						>
 							{!player.isConnected && <span className="player-status">не в сети</span>}
+							{isHost && player.id !== currentPlayerId && onKick && (
+								<button className="btn-kick" onClick={() => onKick(player.id)} title="Кикнуть">
+									✕
+								</button>
+							)}
 						</PlayerChip>
-						{isHost && player.id !== currentPlayerId && onKick && (
-							<button className="btn-kick" onClick={() => onKick(player.id)} title="Кикнуть">
-								✕
-							</button>
-						)}
 					</li>
 				))}
 			</ul>
@@ -78,6 +81,7 @@ export function PlayerRoster({
 			isHost={isHost}
 			speakingPeerIds={speakingPeerIds}
 			mutedPeerIds={mutedPeerIds}
+			voicePeerIds={voicePeerIds}
 			onUpdate={onUpdateTeams}
 			onSwitchTeam={onSwitchTeam}
 			onKick={onKick}
@@ -94,6 +98,7 @@ interface TeamsViewProps {
 	currentPlayerId: string | null;
 	speakingPeerIds?: Set<string>;
 	mutedPeerIds?: Set<string>;
+	voicePeerIds?: Set<string>;
 	onUpdate: (teams: Record<string, string[]>) => void;
 	onSwitchTeam: (teamId: string) => void;
 	onKick?: (playerId: string) => void;
@@ -106,6 +111,7 @@ function TeamsView({
 	currentPlayerId,
 	speakingPeerIds,
 	mutedPeerIds,
+	voicePeerIds,
 	onUpdate,
 	onSwitchTeam,
 	onKick,
@@ -215,14 +221,6 @@ function TeamsView({
 
 	return (
 		<div className="team-assignment">
-			<div className="team-assignment-header">
-				{isHost && (
-					<button className="btn-small" onClick={autoSplit}>
-						Автораспределение
-					</button>
-				)}
-			</div>
-
 			<DndContext
 				sensors={sensors}
 				collisionDetection={closestCenter}
@@ -242,6 +240,7 @@ function TeamsView({
 							isHost={isHost}
 							speakingPeerIds={speakingPeerIds}
 							mutedPeerIds={mutedPeerIds}
+							voicePeerIds={voicePeerIds}
 							canDrag={canDrag}
 							onSwitchTeam={onSwitchTeam}
 							onKick={onKick}
@@ -256,6 +255,7 @@ function TeamsView({
 						isHost={isHost}
 						speakingPeerIds={speakingPeerIds}
 						mutedPeerIds={mutedPeerIds}
+						voicePeerIds={voicePeerIds}
 						canDrag={canDrag}
 						teamIds={teamIds}
 						movePlayer={movePlayer}
@@ -271,6 +271,28 @@ function TeamsView({
 					)}
 				</DragOverlay>
 			</DndContext>
+
+			{isHost && (
+				<button className="btn-auto-split" onClick={autoSplit}>
+					<svg
+						width="16"
+						height="16"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						strokeWidth="2"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+					>
+						<path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22" />
+						<path d="m18 2 4 4-4 4" />
+						<path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2" />
+						<path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8" />
+						<path d="m18 14 4 4-4 4" />
+					</svg>
+					Автораспределение
+				</button>
+			)}
 		</div>
 	);
 }
@@ -287,6 +309,7 @@ interface TeamColumnProps {
 	isHost: boolean;
 	speakingPeerIds?: Set<string>;
 	mutedPeerIds?: Set<string>;
+	voicePeerIds?: Set<string>;
 	canDrag: (id: string) => boolean;
 	onSwitchTeam: (teamId: string) => void;
 	onKick?: (playerId: string) => void;
@@ -302,6 +325,7 @@ function TeamColumn({
 	isHost,
 	speakingPeerIds,
 	mutedPeerIds,
+	voicePeerIds,
 	canDrag,
 	onSwitchTeam,
 	onKick,
@@ -326,21 +350,22 @@ function TeamColumn({
 					{playerIds.map((playerId) => {
 						const player = getPlayer(playerId);
 						return (
-							<div key={playerId} className="team-player-row">
-								<SortablePlayer
-									playerId={playerId}
-									player={player}
-									currentPlayerId={currentPlayerId}
-									disabled={!canDrag(playerId)}
-									speaking={speakingPeerIds?.has(playerId)}
-									muted={mutedPeerIds?.has(playerId)}
-								/>
+							<SortablePlayer
+								key={playerId}
+								playerId={playerId}
+								player={player}
+								currentPlayerId={currentPlayerId}
+								disabled={!canDrag(playerId)}
+								speaking={speakingPeerIds?.has(playerId)}
+								muted={mutedPeerIds?.has(playerId)}
+								inVoice={voicePeerIds?.has(playerId)}
+							>
 								{isHost && playerId !== currentPlayerId && onKick && (
 									<button className="btn-kick" onClick={() => onKick(playerId)} title="Кикнуть">
 										✕
 									</button>
 								)}
-							</div>
+							</SortablePlayer>
 						);
 					})}
 					{playerIds.length === 0 && <div className="team-column-empty">Перетащите сюда</div>}
@@ -359,6 +384,8 @@ interface SortablePlayerProps {
 	disabled: boolean;
 	speaking?: boolean;
 	muted?: boolean;
+	inVoice?: boolean;
+	children?: ReactNode;
 }
 
 function SortablePlayer({
@@ -368,6 +395,8 @@ function SortablePlayer({
 	disabled,
 	speaking,
 	muted,
+	inVoice,
+	children,
 }: SortablePlayerProps) {
 	const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
 		id: playerId,
@@ -395,7 +424,10 @@ function SortablePlayer({
 				isCurrent={playerId === currentPlayerId}
 				speaking={speaking}
 				muted={muted}
-			/>
+				inVoice={inVoice}
+			>
+				{children}
+			</PlayerChip>
 		</div>
 	);
 }
@@ -408,6 +440,7 @@ interface UnassignedZoneProps {
 	isHost: boolean;
 	speakingPeerIds?: Set<string>;
 	mutedPeerIds?: Set<string>;
+	voicePeerIds?: Set<string>;
 	canDrag: (id: string) => boolean;
 	teamIds: string[];
 	movePlayer: (playerId: string, toTeamId: string) => void;
@@ -420,6 +453,7 @@ function UnassignedZone({
 	isHost,
 	speakingPeerIds,
 	mutedPeerIds,
+	voicePeerIds,
 	canDrag,
 	teamIds,
 	movePlayer,
@@ -438,6 +472,7 @@ function UnassignedZone({
 							disabled={!canDrag(player.id)}
 							speaking={speakingPeerIds?.has(player.id)}
 							muted={mutedPeerIds?.has(player.id)}
+							inVoice={voicePeerIds?.has(player.id)}
 						/>
 						{isHost ? (
 							<div className="team-assign-buttons">
