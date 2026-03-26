@@ -9,6 +9,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY package.json tsconfig.json ./
 COPY src ./src
 COPY public ./public
+RUN bun run copy-wasm
 RUN mkdir -p data
 ENV NODE_ENV=production
 EXPOSE 3000
