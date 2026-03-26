@@ -123,7 +123,8 @@ export function GameScreen() {
 
 				{gameMeta && (
 					<div className="game-hero">
-						<span className="game-hero-title">Fishka</span>
+						<img src="/quokka.svg" alt="" className="game-hero-mascot" aria-hidden="true" />
+						<span className="game-hero-title">Квокка</span>
 						<span className="game-hero-separator">&middot;</span>
 						<span className="game-hero-emoji">{gameMeta.emoji}</span>
 						<span className="game-hero-name">{gameMeta.name}</span>

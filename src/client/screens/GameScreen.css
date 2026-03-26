@@ -87,6 +87,11 @@
 	gap: var(--space-2);
 }
 
+.game-hero-mascot {
+	width: 1.5rem;
+	height: 1.5rem;
+}
+
 .game-hero-title {
 	font-size: var(--text-lg);
 	font-weight: 900;

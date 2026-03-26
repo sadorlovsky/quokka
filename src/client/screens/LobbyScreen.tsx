@@ -161,7 +161,8 @@ function LobbyScreenInner() {
 				</button>
 
 				<div className="lobby-hero">
-					<span className="lobby-hero-title">Fishka</span>
+					<img src="/quokka.svg" alt="" className="lobby-hero-mascot" aria-hidden="true" />
+					<span className="lobby-hero-title">Квокка</span>
 					<span className="lobby-hero-separator">·</span>
 					<span className="lobby-hero-emoji">{gameMeta?.emoji}</span>
 					<span className="lobby-hero-name">{gameMeta?.name}</span>

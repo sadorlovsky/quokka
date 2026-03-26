@@ -115,6 +115,12 @@ const server = Bun.serve({
 			if (!(await file.exists())) return new Response("Not found", { status: 404 });
 			return new Response(file);
 		},
+		"/quokka.svg": new Response(await Bun.file("public/quokka.svg").bytes(), {
+			headers: { "Content-Type": "image/svg+xml" },
+		}),
+		"/quokka-face.svg": new Response(await Bun.file("public/quokka-face.svg").bytes(), {
+			headers: { "Content-Type": "image/svg+xml" },
+		}),
 		"/*": index,
 	},
 

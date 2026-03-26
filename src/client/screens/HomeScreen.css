@@ -13,6 +13,17 @@
 	margin-bottom: 0.5rem;
 }
 
+.home-brand-row {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.home-mascot {
+	width: 3rem;
+	height: 3rem;
+}
+
 .home-title {
 	font-size: var(--text-5xl);
 	font-weight: 900;

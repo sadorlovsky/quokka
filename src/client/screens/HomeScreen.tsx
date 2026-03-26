@@ -62,7 +62,10 @@ export function HomeScreen() {
 	return (
 		<div className="screen home-screen">
 			<div className="home-brand">
-				<h1 className="home-title">Fishka</h1>
+				<div className="home-brand-row">
+					<img src="/quokka.svg" alt="" className="home-mascot" aria-hidden="true" />
+					<h1 className="home-title">Квокка</h1>
+				</div>
 				<p className="home-subtitle">вечерние игры с друзьями</p>
 			</div>
 
