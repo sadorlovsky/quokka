@@ -20,10 +20,6 @@ export function VoiceControls() {
 
 	return (
 		<div className="voice-controls">
-			<div className="voice-peers">
-				<span className="voice-peer-count">{peers.length + 1}</span>
-				<VoiceWaveIcon />
-			</div>
 			<button
 				type="button"
 				className={`voice-mute-btn ${muted ? "voice-mute-btn--muted" : ""}`}

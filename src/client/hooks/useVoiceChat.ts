@@ -53,6 +53,8 @@ export function useVoiceChat() {
 	const joinedRef = useRef(false);
 	const audioContextRef = useRef<AudioContext | null>(null);
 	const localSpeakingRef = useRef(false);
+	const wakeLockRef = useRef<WakeLockSentinel | null>(null);
+	const mutedRef = useRef(false);
 
 	// Remote peer VAD (simple analyser-based — remote audio is already noise-suppressed)
 	const analysersRef = useRef<Map<string, AnalyserNode>>(new Map());
@@ -60,19 +62,41 @@ export function useVoiceChat() {
 
 	// Silero VAD + RNNoise refs
 	const vadInstanceRef = useRef<{
+		start: () => void;
 		pause: () => Promise<void>;
 		destroy: () => Promise<void>;
 	} | null>(null);
 	const rnnoiseNodeRef = useRef<{ destroy: () => void } | null>(null);
 
-	// Keep ref in sync
+	// Keep refs in sync
 	joinedRef.current = joined;
+	mutedRef.current = muted;
 
 	const getAudioContext = useCallback(() => {
 		if (!audioContextRef.current || audioContextRef.current.state === "closed") {
 			audioContextRef.current = new AudioContext({ sampleRate: 48000 });
 		}
 		return audioContextRef.current;
+	}, []);
+
+	// Wake Lock: prevent screen from sleeping while voice chat is active
+	const requestWakeLock = useCallback(async () => {
+		try {
+			if ("wakeLock" in navigator) {
+				wakeLockRef.current = await navigator.wakeLock.request("screen");
+				wakeLockRef.current.addEventListener("release", () => {
+					console.log("[voice] wake lock released");
+				});
+				console.log("[voice] wake lock acquired");
+			}
+		} catch (err) {
+			console.warn("[voice] wake lock request failed:", err);
+		}
+	}, []);
+
+	const releaseWakeLock = useCallback(() => {
+		wakeLockRef.current?.release();
+		wakeLockRef.current = null;
 	}, []);
 
 	const createRemoteAnalyser = useCallback(
@@ -362,8 +386,177 @@ export function useVoiceChat() {
 				localStreamRef.current = null;
 			}
 			processedStreamRef.current = null;
+
+			releaseWakeLock();
 		};
-	}, []);
+	}, [releaseWakeLock]);
+
+	// Recover voice chat after iOS Safari background/lock screen
+	useEffect(() => {
+		if (!joined) return;
+
+		const handleVisibilityChange = async () => {
+			if (document.visibilityState !== "visible" || !joinedRef.current) return;
+
+			console.log("[voice] tab became visible, checking voice chat health...");
+
+			// 1. Resume AudioContext if suspended (iOS suspends it on lock)
+			const ctx = audioContextRef.current;
+			if (ctx && ctx.state === "suspended") {
+				try {
+					await ctx.resume();
+					console.log("[voice] AudioContext resumed");
+				} catch (err) {
+					console.warn("[voice] AudioContext resume failed:", err);
+				}
+			}
+
+			// 2. Re-request wake lock (it's released when tab goes to background)
+			requestWakeLock();
+
+			// 3. Check if local mic tracks are still alive
+			const rawStream = localStreamRef.current;
+			const tracksEnded = rawStream?.getAudioTracks().some((t) => t.readyState === "ended");
+
+			if (!rawStream || tracksEnded) {
+				console.log("[voice] mic tracks ended, re-acquiring microphone...");
+				try {
+					const newStream = await navigator.mediaDevices.getUserMedia({
+						audio: {
+							sampleRate: 48000,
+							channelCount: 1,
+							latency: { ideal: 0.01 },
+							echoCancellation: true,
+							noiseSuppression: false,
+							autoGainControl: true,
+						},
+					});
+					localStreamRef.current = newStream;
+
+					// Apply mute state
+					for (const track of newStream.getAudioTracks()) {
+						track.enabled = !mutedRef.current;
+					}
+
+					// Re-setup RNNoise pipeline
+					const audioCtx = getAudioContext();
+					try {
+						// Clean up old RNNoise
+						rnnoiseNodeRef.current?.destroy();
+						rnnoiseNodeRef.current = null;
+
+						const { RnnoiseWorkletNode, loadRnnoise } = await import(
+							"@sapphi-red/web-noise-suppressor"
+						);
+						const wasmBinary = await loadRnnoise({
+							url: "/rnnoise/rnnoise.wasm",
+							simdUrl: "/rnnoise/rnnoise_simd.wasm",
+						});
+						await audioCtx.audioWorklet.addModule("/rnnoise/workletProcessor.js");
+						const rnnoiseNode = new RnnoiseWorkletNode(audioCtx, {
+							maxChannels: 1,
+							wasmBinary,
+						});
+						rnnoiseNodeRef.current = rnnoiseNode;
+
+						const source = audioCtx.createMediaStreamSource(newStream);
+						const destination = audioCtx.createMediaStreamDestination();
+						const dryGain = audioCtx.createGain();
+						const wetGain = audioCtx.createGain();
+						dryGain.gain.value = 0.15;
+						wetGain.gain.value = 0.85;
+						source.connect(rnnoiseNode);
+						rnnoiseNode.connect(wetGain);
+						source.connect(dryGain);
+						wetGain.connect(destination);
+						dryGain.connect(destination);
+
+						processedStreamRef.current = destination.stream;
+						console.log("[voice] RNNoise re-initialized after recovery");
+					} catch (err) {
+						console.warn("[voice] RNNoise re-setup failed, using raw audio:", err);
+						processedStreamRef.current = newStream;
+					}
+
+					// Re-setup Silero VAD
+					try {
+						vadInstanceRef.current?.destroy();
+						vadInstanceRef.current = null;
+
+						const { MicVAD } = await import("@ricky0123/vad-web");
+						const currentPlayerId = playerId;
+						const currentSend = send;
+						const vad = await MicVAD.new({
+							getStream: () => Promise.resolve(newStream),
+							positiveSpeechThreshold: 0.8,
+							negativeSpeechThreshold: 0.3,
+							minSpeechFrames: 3,
+							redemptionFrames: 8,
+							startOnLoad: false,
+							baseAssetPath: "/vad/",
+							onnxWASMBasePath: "/vad/",
+							onSpeechStart: () => {
+								if (currentPlayerId) {
+									localSpeakingRef.current = true;
+									setSpeakingPeerIds((prev) => {
+										if (prev.has(currentPlayerId)) return prev;
+										const next = new Set(prev);
+										next.add(currentPlayerId);
+										return next;
+									});
+									currentSend({ type: "voiceSpeaking", speaking: true });
+								}
+							},
+							onSpeechEnd: (_audio: Float32Array) => {
+								if (currentPlayerId) {
+									localSpeakingRef.current = false;
+									setSpeakingPeerIds((prev) => {
+										if (!prev.has(currentPlayerId)) return prev;
+										const next = new Set(prev);
+										next.delete(currentPlayerId);
+										return next;
+									});
+									currentSend({ type: "voiceSpeaking", speaking: false });
+								}
+							},
+						});
+						if (!mutedRef.current) vad.start();
+						vadInstanceRef.current = vad;
+						console.log("[voice] Silero VAD re-initialized after recovery");
+					} catch (err) {
+						console.warn("[voice] Silero VAD re-setup failed:", err);
+					}
+				} catch (err) {
+					console.error("[voice] failed to re-acquire microphone:", err);
+					return;
+				}
+			}
+
+			// 4. Check peer connections and renegotiate broken ones
+			const stream = processedStreamRef.current ?? localStreamRef.current;
+			for (const [peerId, conn] of connectionsRef.current) {
+				const state = conn.pc.connectionState;
+				if (state === "failed" || state === "closed" || state === "disconnected") {
+					console.log(`[voice] peer ${peerId} connection ${state}, renegotiating...`);
+					conn.pc.close();
+					conn.audio.srcObject = null;
+					connectionsRef.current.delete(peerId);
+					analysersRef.current.delete(peerId);
+					createPeerConnection(peerId, true);
+				} else if (stream) {
+					// Replace tracks on healthy connections (mic stream changed)
+					const sender = conn.pc.getSenders().find((s) => s.track?.kind === "audio");
+					const newTrack = stream.getAudioTracks()[0];
+					if (sender && newTrack && sender.track !== newTrack) {
+						sender.replaceTrack(newTrack).catch(console.warn);
+					}
+				}
+			}
+		};
+
+		document.addEventListener("visibilitychange", handleVisibilityChange);
+		return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+	}, [joined, playerId, send, getAudioContext, requestWakeLock, createPeerConnection]);
 
 	const join = useCallback(async () => {
 		try {
@@ -487,10 +680,11 @@ export function useVoiceChat() {
 			setJoined(true);
 			setMuted(false);
 			send({ type: "voiceJoin" });
+			requestWakeLock();
 		} catch (err) {
 			console.error("[voice] microphone access denied:", err);
 		}
-	}, [send, getAudioContext, playerId]);
+	}, [send, getAudioContext, playerId, requestWakeLock]);
 
 	const leave = useCallback(() => {
 		// Close all peer connections
@@ -531,7 +725,8 @@ export function useVoiceChat() {
 		setSpeakingPeerIds(new Set());
 		localSpeakingRef.current = false;
 		send({ type: "voiceLeave" });
-	}, [send]);
+		releaseWakeLock();
+	}, [send, releaseWakeLock]);
 
 	const toggleMute = useCallback(() => {
 		const stream = localStreamRef.current;
