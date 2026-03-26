@@ -13,10 +13,20 @@ import { LobbyChat } from "../components/LobbyChat";
 import { PlayerRoster } from "../components/PlayerRoster";
 import { VoiceControls } from "../components/VoiceControls";
 import { useConnection } from "../contexts/ConnectionContext";
+import { useVoice, VoiceProvider } from "../contexts/VoiceContext";
 import "./LobbyScreen.css";
 
 export function LobbyScreen() {
+	return (
+		<VoiceProvider>
+			<LobbyScreenInner />
+		</VoiceProvider>
+	);
+}
+
+function LobbyScreenInner() {
 	const { room, playerId, send } = useConnection();
+	const { speakingPeerIds, muted, peers, joined } = useVoice();
 	const [codeCopied, setCodeCopied] = useState(false);
 
 	const copyFromCode = useCallback(async () => {
@@ -130,6 +140,18 @@ export function LobbyScreen() {
 
 	const rosterMode = gameId === "word-guess" ? (config as WordGuessConfig).mode : "ffa";
 
+	const mutedPeerIds = new Set<string>();
+	if (joined) {
+		for (const peer of peers) {
+			if (peer.muted) {
+				mutedPeerIds.add(peer.playerId);
+			}
+		}
+		if (muted && playerId) {
+			mutedPeerIds.add(playerId);
+		}
+	}
+
 	const gameMeta = GAME_META[room.settings.gameId];
 
 	return (
@@ -162,7 +184,6 @@ export function LobbyScreen() {
 				</div>
 
 				<div className="lobby-topbar-right">
-					<VoiceControls />
 					<button
 						type="button"
 						className={`lobby-room-code${codeCopied ? " lobby-room-code--copied" : ""}`}
@@ -219,6 +240,8 @@ export function LobbyScreen() {
 						mode={rosterMode}
 						teams={teams}
 						isHost={isHost}
+						speakingPeerIds={speakingPeerIds}
+						mutedPeerIds={mutedPeerIds}
 						onUpdateTeams={handleUpdateTeams}
 						onSwitchTeam={(teamId) => send({ type: "switchTeam", teamId })}
 						onKick={
@@ -239,7 +262,7 @@ export function LobbyScreen() {
 
 			{/* Chat + start button pinned to bottom */}
 			<div className="lobby-actions">
-				<LobbyChat />
+				<LobbyChat voiceControls={<VoiceControls />} />
 				{isHost ? (
 					<button className="btn btn-primary" disabled={!canStartFinal} onClick={handleStart}>
 						{room.players.length < 2

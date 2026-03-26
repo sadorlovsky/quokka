@@ -23,6 +23,8 @@ interface PlayerRosterProps {
 	mode: "ffa" | "teams";
 	teams: Record<string, string[]>;
 	isHost: boolean;
+	speakingPeerIds?: Set<string>;
+	mutedPeerIds?: Set<string>;
 	onUpdateTeams: (teams: Record<string, string[]>) => void;
 	onSwitchTeam: (teamId: string) => void;
 	onKick?: (playerId: string) => void;
@@ -34,6 +36,8 @@ export function PlayerRoster({
 	mode,
 	teams,
 	isHost,
+	speakingPeerIds,
+	mutedPeerIds,
 	onUpdateTeams,
 	onSwitchTeam,
 	onKick,
@@ -50,6 +54,8 @@ export function PlayerRoster({
 							isHost={player.isHost}
 							isCurrent={player.id === currentPlayerId}
 							disconnected={!player.isConnected}
+							speaking={speakingPeerIds?.has(player.id)}
+							muted={mutedPeerIds?.has(player.id)}
 						>
 							{!player.isConnected && <span className="player-status">не в сети</span>}
 						</PlayerChip>
@@ -70,6 +76,8 @@ export function PlayerRoster({
 			currentPlayerId={currentPlayerId}
 			teams={teams}
 			isHost={isHost}
+			speakingPeerIds={speakingPeerIds}
+			mutedPeerIds={mutedPeerIds}
 			onUpdate={onUpdateTeams}
 			onSwitchTeam={onSwitchTeam}
 			onKick={onKick}
@@ -84,6 +92,8 @@ interface TeamsViewProps {
 	teams: Record<string, string[]>;
 	isHost: boolean;
 	currentPlayerId: string | null;
+	speakingPeerIds?: Set<string>;
+	mutedPeerIds?: Set<string>;
 	onUpdate: (teams: Record<string, string[]>) => void;
 	onSwitchTeam: (teamId: string) => void;
 	onKick?: (playerId: string) => void;
@@ -94,6 +104,8 @@ function TeamsView({
 	teams,
 	isHost,
 	currentPlayerId,
+	speakingPeerIds,
+	mutedPeerIds,
 	onUpdate,
 	onSwitchTeam,
 	onKick,
@@ -228,6 +240,8 @@ function TeamsView({
 							currentPlayerId={currentPlayerId}
 							currentTeamId={currentTeamId}
 							isHost={isHost}
+							speakingPeerIds={speakingPeerIds}
+							mutedPeerIds={mutedPeerIds}
 							canDrag={canDrag}
 							onSwitchTeam={onSwitchTeam}
 							onKick={onKick}
@@ -240,6 +254,8 @@ function TeamsView({
 						players={unassigned}
 						currentPlayerId={currentPlayerId}
 						isHost={isHost}
+						speakingPeerIds={speakingPeerIds}
+						mutedPeerIds={mutedPeerIds}
 						canDrag={canDrag}
 						teamIds={teamIds}
 						movePlayer={movePlayer}
@@ -269,6 +285,8 @@ interface TeamColumnProps {
 	currentPlayerId: string | null;
 	currentTeamId: string | undefined;
 	isHost: boolean;
+	speakingPeerIds?: Set<string>;
+	mutedPeerIds?: Set<string>;
 	canDrag: (id: string) => boolean;
 	onSwitchTeam: (teamId: string) => void;
 	onKick?: (playerId: string) => void;
@@ -282,6 +300,8 @@ function TeamColumn({
 	currentPlayerId,
 	currentTeamId,
 	isHost,
+	speakingPeerIds,
+	mutedPeerIds,
 	canDrag,
 	onSwitchTeam,
 	onKick,
@@ -312,6 +332,8 @@ function TeamColumn({
 									player={player}
 									currentPlayerId={currentPlayerId}
 									disabled={!canDrag(playerId)}
+									speaking={speakingPeerIds?.has(playerId)}
+									muted={mutedPeerIds?.has(playerId)}
 								/>
 								{isHost && playerId !== currentPlayerId && onKick && (
 									<button className="btn-kick" onClick={() => onKick(playerId)} title="Кикнуть">
@@ -335,9 +357,18 @@ interface SortablePlayerProps {
 	player: PlayerInfo | undefined;
 	currentPlayerId: string | null;
 	disabled: boolean;
+	speaking?: boolean;
+	muted?: boolean;
 }
 
-function SortablePlayer({ playerId, player, currentPlayerId, disabled }: SortablePlayerProps) {
+function SortablePlayer({
+	playerId,
+	player,
+	currentPlayerId,
+	disabled,
+	speaking,
+	muted,
+}: SortablePlayerProps) {
 	const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
 		id: playerId,
 		disabled,
@@ -362,6 +393,8 @@ function SortablePlayer({ playerId, player, currentPlayerId, disabled }: Sortabl
 				isMe={playerId === currentPlayerId}
 				isHost={player?.isHost}
 				isCurrent={playerId === currentPlayerId}
+				speaking={speaking}
+				muted={muted}
 			/>
 		</div>
 	);
@@ -373,6 +406,8 @@ interface UnassignedZoneProps {
 	players: PlayerInfo[];
 	currentPlayerId: string | null;
 	isHost: boolean;
+	speakingPeerIds?: Set<string>;
+	mutedPeerIds?: Set<string>;
 	canDrag: (id: string) => boolean;
 	teamIds: string[];
 	movePlayer: (playerId: string, toTeamId: string) => void;
@@ -383,6 +418,8 @@ function UnassignedZone({
 	players,
 	currentPlayerId,
 	isHost,
+	speakingPeerIds,
+	mutedPeerIds,
 	canDrag,
 	teamIds,
 	movePlayer,
@@ -399,6 +436,8 @@ function UnassignedZone({
 							player={player}
 							currentPlayerId={currentPlayerId}
 							disabled={!canDrag(player.id)}
+							speaking={speakingPeerIds?.has(player.id)}
+							muted={mutedPeerIds?.has(player.id)}
 						/>
 						{isHost ? (
 							<div className="team-assign-buttons">

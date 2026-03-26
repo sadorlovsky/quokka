@@ -11,23 +11,49 @@ interface PeerConnection {
 	audio: HTMLAudioElement;
 }
 
+const VAD_THRESHOLD = 0.015;
+const VAD_INTERVAL_MS = 100;
+
 const ICE_SERVERS: RTCIceServer[] = [
 	{ urls: "stun:stun.l.google.com:19302" },
 	{ urls: "stun:stun1.l.google.com:19302" },
 ];
 
 export function useVoiceChat() {
-	const { send, onVoiceEvent } = useConnection();
+	const { send, onVoiceEvent, playerId } = useConnection();
 	const [joined, setJoined] = useState(false);
 	const [muted, setMuted] = useState(false);
 	const [peers, setPeers] = useState<VoicePeer[]>([]);
+	const [speakingPeerIds, setSpeakingPeerIds] = useState<Set<string>>(new Set());
 
 	const localStreamRef = useRef<MediaStream | null>(null);
 	const connectionsRef = useRef<Map<string, PeerConnection>>(new Map());
 	const joinedRef = useRef(false);
+	const audioContextRef = useRef<AudioContext | null>(null);
+	const analysersRef = useRef<Map<string, AnalyserNode>>(new Map());
+	const vadIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
 	// Keep ref in sync
 	joinedRef.current = joined;
+
+	const getAudioContext = useCallback(() => {
+		if (!audioContextRef.current) {
+			audioContextRef.current = new AudioContext();
+		}
+		return audioContextRef.current;
+	}, []);
+
+	const createAnalyser = useCallback(
+		(id: string, stream: MediaStream) => {
+			const ctx = getAudioContext();
+			const source = ctx.createMediaStreamSource(stream);
+			const analyser = ctx.createAnalyser();
+			analyser.fftSize = 256;
+			source.connect(analyser);
+			analysersRef.current.set(id, analyser);
+		},
+		[getAudioContext],
+	);
 
 	const createPeerConnection = useCallback(
 		(peerId: string, isInitiator: boolean) => {
@@ -36,6 +62,7 @@ export function useVoiceChat() {
 				existing.pc.close();
 				existing.audio.srcObject = null;
 			}
+			analysersRef.current.delete(peerId);
 
 			const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
 			const audio = new Audio();
@@ -49,9 +76,13 @@ export function useVoiceChat() {
 				}
 			}
 
-			// Receive remote audio
+			// Receive remote audio + set up VAD analyser
 			pc.ontrack = (e) => {
-				audio.srcObject = e.streams[0] ?? null;
+				const remoteStream = e.streams[0] ?? null;
+				audio.srcObject = remoteStream;
+				if (remoteStream) {
+					createAnalyser(peerId, remoteStream);
+				}
 			};
 
 			// Send ICE candidates
@@ -86,7 +117,7 @@ export function useVoiceChat() {
 
 			return pc;
 		},
-		[send],
+		[send, createAnalyser],
 	);
 
 	const handleVoiceEvent = useCallback(
@@ -115,6 +146,7 @@ export function useVoiceChat() {
 
 				case "voicePeerLeft": {
 					setPeers((prev) => prev.filter((p) => p.playerId !== event.playerId));
+					analysersRef.current.delete(event.playerId);
 					const conn = connectionsRef.current.get(event.playerId);
 					if (conn) {
 						conn.pc.close();
@@ -183,9 +215,67 @@ export function useVoiceChat() {
 		return onVoiceEvent(handleVoiceEvent);
 	}, [onVoiceEvent, handleVoiceEvent]);
 
+	// VAD polling
+	useEffect(() => {
+		if (!joined) {
+			return;
+		}
+
+		const dataArray = new Uint8Array(128);
+
+		vadIntervalRef.current = setInterval(() => {
+			const next = new Set<string>();
+
+			// Check local stream (self)
+			const localAnalyser = analysersRef.current.get("__local__");
+			if (localAnalyser && playerId) {
+				localAnalyser.getByteFrequencyData(dataArray);
+				const avg = dataArray.reduce((sum, v) => sum + v, 0) / dataArray.length / 255;
+				if (avg > VAD_THRESHOLD) {
+					next.add(playerId);
+				}
+			}
+
+			// Check remote streams
+			for (const [peerId, analyser] of analysersRef.current) {
+				if (peerId === "__local__") continue;
+				analyser.getByteFrequencyData(dataArray);
+				const avg = dataArray.reduce((sum, v) => sum + v, 0) / dataArray.length / 255;
+				if (avg > VAD_THRESHOLD) {
+					next.add(peerId);
+				}
+			}
+
+			setSpeakingPeerIds((prev) => {
+				if (prev.size === next.size && [...prev].every((id) => next.has(id))) {
+					return prev;
+				}
+				return next;
+			});
+		}, VAD_INTERVAL_MS);
+
+		return () => {
+			if (vadIntervalRef.current) {
+				clearInterval(vadIntervalRef.current);
+				vadIntervalRef.current = null;
+			}
+			setSpeakingPeerIds(new Set());
+		};
+	}, [joined, playerId]);
+
 	// Cleanup on unmount
 	useEffect(() => {
 		return () => {
+			if (vadIntervalRef.current) {
+				clearInterval(vadIntervalRef.current);
+				vadIntervalRef.current = null;
+			}
+			analysersRef.current.clear();
+			if (audioContextRef.current) {
+				audioContextRef.current.close();
+				audioContextRef.current = null;
+			}
+
 			for (const { pc, audio } of connectionsRef.current.values()) {
 				pc.close();
 				audio.srcObject = null;
@@ -212,13 +302,14 @@ export function useVoiceChat() {
 				},
 			});
 			localStreamRef.current = stream;
+			createAnalyser("__local__", stream);
 			setJoined(true);
 			setMuted(false);
 			send({ type: "voiceJoin" });
 		} catch (err) {
 			console.error("[voice] microphone access denied:", err);
 		}
-	}, [send]);
+	}, [send, createAnalyser]);
 
 	const leave = useCallback(() => {
 		// Close all peer connections
@@ -237,9 +328,17 @@ export function useVoiceChat() {
 			localStreamRef.current = null;
 		}
 
+		// Clean up VAD
+		analysersRef.current.clear();
+		if (audioContextRef.current) {
+			audioContextRef.current.close();
+			audioContextRef.current = null;
+		}
+
 		setPeers([]);
 		setJoined(false);
 		setMuted(false);
+		setSpeakingPeerIds(new Set());
 		send({ type: "voiceLeave" });
 	}, [send]);
 
@@ -261,6 +360,7 @@ export function useVoiceChat() {
 		joined,
 		muted,
 		peers,
+		speakingPeerIds,
 		join,
 		leave,
 		toggleMute,

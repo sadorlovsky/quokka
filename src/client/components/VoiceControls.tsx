@@ -1,10 +1,10 @@
 import { useConnection } from "../contexts/ConnectionContext";
-import { useVoiceChat } from "../hooks/useVoiceChat";
+import { useVoice } from "../contexts/VoiceContext";
 import "./VoiceControls.css";
 
 export function VoiceControls() {
 	const { room } = useConnection();
-	const { joined, muted, peers, join, leave, toggleMute } = useVoiceChat();
+	const { joined, muted, peers, join, leave, toggleMute } = useVoice();
 
 	if (!room) {
 		return null;

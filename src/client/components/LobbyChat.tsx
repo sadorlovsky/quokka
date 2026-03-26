@@ -1,8 +1,9 @@
+import type { ReactNode } from "react";
 import { useState } from "react";
 import { useChatMessages } from "../hooks/useChatMessages";
 import "./LobbyChat.css";
 
-export function LobbyChat() {
+export function LobbyChat({ voiceControls }: { voiceControls?: ReactNode }) {
 	const { messages, sendMessage, getPlayerColor } = useChatMessages({ autoFade: true });
 	const [text, setText] = useState("");
 
@@ -18,21 +19,24 @@ export function LobbyChat() {
 
 	return (
 		<section className="lobby-chat" aria-label="Чат">
-			<div className="lobby-chat-messages">
-				{messages.map((msg) => (
-					<div
-						key={msg.id}
-						className={`lobby-chat-bubble${msg.fading ? " lobby-chat-bubble--fading" : ""}`}
-					>
-						<span
-							className="lobby-chat-bubble-name"
-							style={{ color: getPlayerColor(msg.playerId) }}
+			<div className="lobby-chat-toolbar">
+				<div className="lobby-chat-messages">
+					{messages.map((msg) => (
+						<div
+							key={msg.id}
+							className={`lobby-chat-bubble${msg.fading ? " lobby-chat-bubble--fading" : ""}`}
 						>
-							{msg.playerName}
-						</span>
-						<span className="lobby-chat-bubble-text">{msg.text}</span>
-					</div>
-				))}
+							<span
+								className="lobby-chat-bubble-name"
+								style={{ color: getPlayerColor(msg.playerId) }}
+							>
+								{msg.playerName}
+							</span>
+							<span className="lobby-chat-bubble-text">{msg.text}</span>
+						</div>
+					))}
+				</div>
+				{voiceControls && <div className="lobby-chat-voice">{voiceControls}</div>}
 			</div>
 			<form className="lobby-chat-input-wrap" onSubmit={handleSubmit}>
 				<input
