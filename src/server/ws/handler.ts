@@ -12,10 +12,38 @@ import {
 	drawStrokeRateLimiter,
 	gameActionRateLimiter,
 	joinRateLimiter,
+	voiceSignalRateLimiter,
 } from "./rate-limit";
 
 // In-memory drawing strokes per room (for reconnect replay)
 const drawingStrokes = new Map<string, { x: number; y: number }[][]>();
+
+// In-memory voice chat state per room: playerId → muted
+const voiceRooms = new Map<string, Map<string, boolean>>();
+
+export function getVoicePeers(roomCode: string): { playerId: string; muted: boolean }[] {
+	const peers = voiceRooms.get(roomCode);
+	if (!peers) {
+		return [];
+	}
+	return Array.from(peers.entries()).map(([playerId, muted]) => ({ playerId, muted }));
+}
+
+function removeFromVoice(roomCode: string, playerId: string): void {
+	const peers = voiceRooms.get(roomCode);
+	if (!peers) {
+		return;
+	}
+	if (peers.delete(playerId)) {
+		if (peers.size === 0) {
+			voiceRooms.delete(roomCode);
+		}
+		roomManager.sendToRoom(roomCode, {
+			type: "voicePeerLeft",
+			playerId,
+		});
+	}
+}
 
 export function clearDrawingStrokes(roomCode: string): void {
 	drawingStrokes.delete(roomCode);
@@ -86,6 +114,18 @@ export function handleMessage(ws: ServerWebSocket<WSData>, raw: string | Buffer)
 				break;
 			case "chatMessage":
 				handleChatMessage(ws, msg);
+				break;
+			case "voiceJoin":
+				handleVoiceJoin(ws);
+				break;
+			case "voiceLeave":
+				handleVoiceLeave(ws);
+				break;
+			case "voiceSignal":
+				handleVoiceSignal(ws, msg);
+				break;
+			case "voiceMute":
+				handleVoiceMute(ws, msg);
 				break;
 			default:
 				sendError(ws, ErrorCode.INVALID_MESSAGE, "Unknown message type");
@@ -161,6 +201,9 @@ function removePlayerFromRoom(
 	}
 
 	const roomCode = player.roomCode;
+
+	// Remove from voice chat
+	removeFromVoice(roomCode, playerId);
 	const roomBefore = roomManager.get(roomCode);
 	const wasPlaying = roomBefore?.status === "playing";
 
@@ -785,6 +828,100 @@ function handleChatMessage(
 	});
 }
 
+function handleVoiceJoin(ws: ServerWebSocket<WSData>): void {
+	const player = playerManager.getByWs(ws);
+	if (!player?.roomCode) {
+		return;
+	}
+
+	if (!voiceRooms.has(player.roomCode)) {
+		voiceRooms.set(player.roomCode, new Map());
+	}
+	const peers = voiceRooms.get(player.roomCode)!;
+
+	// Already in voice
+	if (peers.has(player.id)) {
+		return;
+	}
+
+	// Send current voice state to the joining player
+	send(ws, {
+		type: "voiceState",
+		peers: getVoicePeers(player.roomCode),
+	});
+
+	// Add to voice room
+	peers.set(player.id, false);
+
+	// Notify others
+	roomManager.sendToRoomExcept(player.roomCode, player.id, {
+		type: "voicePeerJoined",
+		playerId: player.id,
+		muted: false,
+	});
+
+	console.log(`[ws] ${player.name} joined voice in room ${player.roomCode}`);
+}
+
+function handleVoiceLeave(ws: ServerWebSocket<WSData>): void {
+	const player = playerManager.getByWs(ws);
+	if (!player?.roomCode) {
+		return;
+	}
+
+	removeFromVoice(player.roomCode, player.id);
+	console.log(`[ws] ${player.name} left voice in room ${player.roomCode}`);
+}
+
+function handleVoiceSignal(
+	ws: ServerWebSocket<WSData>,
+	msg: Extract<ClientMessage, { type: "voiceSignal" }>,
+): void {
+	const player = playerManager.getByWs(ws);
+	if (!player?.roomCode) {
+		return;
+	}
+
+	if (!voiceSignalRateLimiter.check(player.id)) {
+		return;
+	}
+
+	// Verify both players are in the same voice room
+	const peers = voiceRooms.get(player.roomCode);
+	if (!peers?.has(player.id) || !peers.has(msg.targetPlayerId)) {
+		return;
+	}
+
+	roomManager.sendToPlayer(msg.targetPlayerId, {
+		type: "voiceSignal",
+		fromPlayerId: player.id,
+		signal: msg.signal,
+	});
+}
+
+function handleVoiceMute(
+	ws: ServerWebSocket<WSData>,
+	msg: Extract<ClientMessage, { type: "voiceMute" }>,
+): void {
+	const player = playerManager.getByWs(ws);
+	if (!player?.roomCode) {
+		return;
+	}
+
+	const peers = voiceRooms.get(player.roomCode);
+	if (!peers?.has(player.id)) {
+		return;
+	}
+
+	peers.set(player.id, msg.muted);
+
+	roomManager.sendToRoomExcept(player.roomCode, player.id, {
+		type: "voiceMuteChanged",
+		playerId: player.id,
+		muted: msg.muted,
+	});
+}
+
 export function handleClose(ws: ServerWebSocket<WSData>, code: number, _reason: string): void {
 	const player = playerManager.disconnect(ws);
 	if (!player) {
@@ -793,6 +930,9 @@ export function handleClose(ws: ServerWebSocket<WSData>, code: number, _reason: 
 
 	// Notify room about disconnection (not removal — player can reconnect)
 	if (player.roomCode) {
+		// Remove from voice chat
+		removeFromVoice(player.roomCode, player.id);
+
 		roomManager.sendToRoom(player.roomCode, {
 			type: "playerDisconnected",
 			playerId: player.id,

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { PlayerInfo } from "@/shared/types/room";
 import { PlayerChip } from "../components/PlayerChip";
+import { VoiceControls } from "../components/VoiceControls";
 import { useConnection } from "../contexts/ConnectionContext";
 import { CrocodileGame } from "../games/crocodile/CrocodileGame";
 import { HangmanGame } from "../games/hangman/HangmanGame";
@@ -104,7 +105,10 @@ export function GameScreen() {
 						Выйти
 					</button>
 				</div>
-				<span className="room-code-small">{room.code}</span>
+				<div className="game-header-right">
+					<VoiceControls />
+					<span className="room-code-small">{room.code}</span>
+				</div>
 			</div>
 			{room.settings.gameId === "word-guess" ? (
 				<WordGuessGame />

@@ -45,6 +45,12 @@
 	}
 }
 
+.lobby-topbar-right {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
 /* Room code button */
 
 .lobby-room-code {

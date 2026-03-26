@@ -72,3 +72,6 @@ export const drawStrokeRateLimiter = new RateLimiter(30, 1_000, "drawStroke");
 
 // 5 chat messages per 3 seconds per player (keyed by playerId)
 export const chatRateLimiter = new RateLimiter(5, 3_000, "chat");
+
+// 50 voice signaling messages per second per player (SDP + ICE candidates burst)
+export const voiceSignalRateLimiter = new RateLimiter(50, 1_000, "voiceSignal");

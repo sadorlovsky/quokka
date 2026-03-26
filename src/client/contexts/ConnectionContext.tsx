@@ -16,6 +16,11 @@ import type {
 	DrawStrokeMessage,
 	DrawUndoMessage,
 	ServerMessage,
+	VoiceMuteChangedMessage,
+	VoicePeerJoinedMessage,
+	VoicePeerLeftMessage,
+	VoiceSignalRelayMessage,
+	VoiceStateMessage,
 } from "@/shared/types/protocol";
 import type { RoomState } from "@/shared/types/room";
 import { type ConnectionStatus, useWebSocket } from "../hooks/useWebSocket";
@@ -25,6 +30,13 @@ export type DrawingEvent =
 	| DrawClearMessage
 	| DrawUndoMessage
 	| DrawHistoryMessage;
+
+export type VoiceEvent =
+	| VoicePeerJoinedMessage
+	| VoicePeerLeftMessage
+	| VoiceSignalRelayMessage
+	| VoiceMuteChangedMessage
+	| VoiceStateMessage;
 
 interface ConnectionState {
 	status: ConnectionStatus;
@@ -39,6 +51,7 @@ interface ConnectionState {
 	ensurePlayer: (name: string, avatarSeed: number, then: () => void) => void;
 	onDrawingEvent: (listener: (event: DrawingEvent) => void) => () => void;
 	onChatMessage: (listener: (msg: ChatBroadcastMessage) => void) => () => void;
+	onVoiceEvent: (listener: (event: VoiceEvent) => void) => () => void;
 }
 
 const ConnectionCtx = createContext<ConnectionState | null>(null);
@@ -56,6 +69,7 @@ export function ConnectionProvider({ children }: { children: ReactNode }) {
 	const awaitingRoomRef = useRef(false);
 	const drawingListenersRef = useRef<Set<(event: DrawingEvent) => void>>(new Set());
 	const chatListenersRef = useRef<Set<(msg: ChatBroadcastMessage) => void>>(new Set());
+	const voiceListenersRef = useRef<Set<(event: VoiceEvent) => void>>(new Set());
 
 	const handleMessage = useCallback((msg: ServerMessage) => {
 		switch (msg.type) {
@@ -193,6 +207,16 @@ export function ConnectionProvider({ children }: { children: ReactNode }) {
 				}
 				break;
 
+			case "voicePeerJoined":
+			case "voicePeerLeft":
+			case "voiceSignal":
+			case "voiceMuteChanged":
+			case "voiceState":
+				for (const listener of voiceListenersRef.current) {
+					listener(msg);
+				}
+				break;
+
 			case "error":
 				console.error(`[server error] ${msg.code}: ${msg.message}`);
 				setLastError({ code: msg.code, message: msg.message });
@@ -255,6 +279,13 @@ export function ConnectionProvider({ children }: { children: ReactNode }) {
 		};
 	}, []);
 
+	const onVoiceEvent = useCallback((listener: (event: VoiceEvent) => void) => {
+		voiceListenersRef.current.add(listener);
+		return () => {
+			voiceListenersRef.current.delete(listener);
+		};
+	}, []);
+
 	const ensurePlayer = useCallback(
 		(name: string, avatarSeed: number, then: () => void) => {
 			localStorage.setItem("playerName", name);
@@ -282,6 +313,7 @@ export function ConnectionProvider({ children }: { children: ReactNode }) {
 		ensurePlayer,
 		onDrawingEvent,
 		onChatMessage,
+		onVoiceEvent,
 	};
 
 	return <ConnectionCtx.Provider value={value}>{children}</ConnectionCtx.Provider>;

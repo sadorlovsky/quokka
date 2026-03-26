@@ -79,6 +79,25 @@ export interface ChatMessage {
 	text: string;
 }
 
+export interface VoiceJoinMessage {
+	type: "voiceJoin";
+}
+
+export interface VoiceLeaveMessage {
+	type: "voiceLeave";
+}
+
+export interface VoiceSignalMessage {
+	type: "voiceSignal";
+	targetPlayerId: string;
+	signal: unknown;
+}
+
+export interface VoiceMuteMessage {
+	type: "voiceMute";
+	muted: boolean;
+}
+
 export type ClientMessage =
 	| ConnectMessage
 	| CreateRoomMessage
@@ -95,7 +114,11 @@ export type ClientMessage =
 	| DrawStrokeMessage
 	| DrawClearMessage
 	| DrawUndoMessage
-	| ChatMessage;
+	| ChatMessage
+	| VoiceJoinMessage
+	| VoiceLeaveMessage
+	| VoiceSignalMessage
+	| VoiceMuteMessage;
 
 // --- Server → Client ---
 
@@ -204,6 +227,34 @@ export interface ChatBroadcastMessage {
 	timestamp: number;
 }
 
+export interface VoicePeerJoinedMessage {
+	type: "voicePeerJoined";
+	playerId: string;
+	muted: boolean;
+}
+
+export interface VoicePeerLeftMessage {
+	type: "voicePeerLeft";
+	playerId: string;
+}
+
+export interface VoiceSignalRelayMessage {
+	type: "voiceSignal";
+	fromPlayerId: string;
+	signal: unknown;
+}
+
+export interface VoiceMuteChangedMessage {
+	type: "voiceMuteChanged";
+	playerId: string;
+	muted: boolean;
+}
+
+export interface VoiceStateMessage {
+	type: "voiceState";
+	peers: { playerId: string; muted: boolean }[];
+}
+
 export interface ErrorMessage {
 	type: "error";
 	code: string;
@@ -234,4 +285,9 @@ export type ServerMessage =
 	| DrawUndoMessage
 	| DrawHistoryMessage
 	| ChatBroadcastMessage
+	| VoicePeerJoinedMessage
+	| VoicePeerLeftMessage
+	| VoiceSignalRelayMessage
+	| VoiceMuteChangedMessage
+	| VoiceStateMessage
 	| ErrorMessage;

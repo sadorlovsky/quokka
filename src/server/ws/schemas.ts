@@ -105,6 +105,25 @@ const ChatMessageSchema = Schema.Struct({
 	text: Schema.String.pipe(Schema.minLength(1), Schema.maxLength(200)),
 });
 
+const VoiceJoinMessage = Schema.Struct({
+	type: Schema.Literal("voiceJoin"),
+});
+
+const VoiceLeaveMessage = Schema.Struct({
+	type: Schema.Literal("voiceLeave"),
+});
+
+const VoiceSignalMessage = Schema.Struct({
+	type: Schema.Literal("voiceSignal"),
+	targetPlayerId: PlayerId,
+	signal: Schema.Unknown,
+});
+
+const VoiceMuteMessage = Schema.Struct({
+	type: Schema.Literal("voiceMute"),
+	muted: Schema.Boolean,
+});
+
 const ClientMessageSchema = Schema.Union(
 	ConnectMessage,
 	HeartbeatMessage,
@@ -122,6 +141,10 @@ const ClientMessageSchema = Schema.Union(
 	DrawClearMessage,
 	DrawUndoMessage,
 	ChatMessageSchema,
+	VoiceJoinMessage,
+	VoiceLeaveMessage,
+	VoiceSignalMessage,
+	VoiceMuteMessage,
 );
 
 const decode = Schema.decodeUnknownEither(ClientMessageSchema);
