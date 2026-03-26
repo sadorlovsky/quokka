@@ -364,44 +364,16 @@ export function useVoiceChat() {
 					sampleRate: 48000,
 					channelCount: 1,
 					echoCancellation: true,
-					noiseSuppression: false, // Disabled — RNNoise handles this
+					noiseSuppression: true,
 					autoGainControl: true,
 				},
 			});
 			localStreamRef.current = rawStream;
 
+			// RNNoise disabled — using browser's built-in noiseSuppression instead
+			processedStreamRef.current = rawStream;
+
 			const ctx = getAudioContext();
-
-			// Set up RNNoise noise suppression pipeline
-			try {
-				const { RnnoiseWorkletNode, loadRnnoise } = await import(
-					"@sapphi-red/web-noise-suppressor"
-				);
-
-				const wasmBinary = await loadRnnoise({
-					url: "/rnnoise/rnnoise.wasm",
-					simdUrl: "/rnnoise/rnnoise_simd.wasm",
-				});
-
-				await ctx.audioWorklet.addModule("/rnnoise/workletProcessor.js");
-
-				const rnnoiseNode = new RnnoiseWorkletNode(ctx, {
-					maxChannels: 1,
-					wasmBinary,
-				});
-				rnnoiseNodeRef.current = rnnoiseNode;
-
-				const source = ctx.createMediaStreamSource(rawStream);
-				const destination = ctx.createMediaStreamDestination();
-				source.connect(rnnoiseNode);
-				rnnoiseNode.connect(destination);
-
-				processedStreamRef.current = destination.stream;
-				console.log("[voice] RNNoise noise suppression enabled");
-			} catch (err) {
-				console.warn("[voice] RNNoise setup failed, using raw audio:", err);
-				processedStreamRef.current = rawStream;
-			}
 
 			// Set up Silero VAD for local speech detection
 			try {
