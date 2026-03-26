@@ -1,7 +1,7 @@
 .timer {
 	display: flex;
 	align-items: baseline;
-	gap: 0.25rem;
+	gap: var(--space-1);
 	padding: 0.5rem 1.25rem;
 	background: var(--color-surface);
 	border-radius: var(--radius-pill);
@@ -10,14 +10,14 @@
 
 .timer-value {
 	font-family: var(--font-mono);
-	font-size: 1.5rem;
+	font-size: var(--text-3xl);
 	font-weight: 700;
 	min-width: 2ch;
 	text-align: center;
 }
 
 .timer-label {
-	font-size: 0.75rem;
+	font-size: var(--text-sm);
 	font-weight: 600;
 	color: var(--color-text-muted);
 }

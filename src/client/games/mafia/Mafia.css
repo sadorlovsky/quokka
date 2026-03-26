@@ -6,8 +6,8 @@
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: 16px;
-	padding: 16px;
+	gap: var(--space-5);
+	padding: var(--space-5);
 	width: 100%;
 	max-width: 600px;
 	margin: 0 auto;
@@ -19,7 +19,7 @@
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: 16px;
+	gap: var(--space-5);
 	text-align: center;
 	width: 100%;
 }
@@ -29,33 +29,33 @@
 }
 
 .mafia-overlay--role-reveal {
-	padding-top: 32px;
+	padding-top: var(--space-8);
 }
 
 /* --- Phase titles --- */
 
 .mafia-phase-title {
-	font-size: 1.4rem;
+	font-size: var(--text-2xl);
 	font-weight: 800;
 	color: var(--color-text);
 }
 
 .mafia-phase-subtitle {
-	font-size: 1rem;
+	font-size: var(--text-lg);
 	color: var(--color-text-muted);
 }
 
 /* --- Role reveal --- */
 
 .mafia-overlay-subtitle {
-	font-size: 1rem;
+	font-size: var(--text-lg);
 	color: var(--color-text-muted);
 	text-transform: uppercase;
 	letter-spacing: 0.08em;
 }
 
 .mafia-role-title {
-	font-size: 2rem;
+	font-size: var(--text-4xl);
 	font-weight: 900;
 }
 
@@ -68,13 +68,13 @@
 }
 
 .mafia-team-label {
-	font-size: 0.9rem;
+	font-size: var(--text-base);
 	color: var(--color-text-muted);
 }
 
 .mafia-allies {
-	margin-top: 8px;
-	padding: 12px 16px;
+	margin-top: var(--space-3);
+	padding: var(--space-4) var(--space-5);
 	background: var(--color-surface);
 	border-radius: var(--radius-md);
 	border: 1px solid var(--color-border);
@@ -83,20 +83,20 @@
 }
 
 .mafia-allies-title {
-	font-size: 0.85rem;
+	font-size: var(--text-base);
 	color: var(--color-text-muted);
-	margin-bottom: 8px;
+	margin-bottom: var(--space-3);
 }
 
 .mafia-allies-list {
 	list-style: none;
 	display: flex;
 	flex-direction: column;
-	gap: 4px;
+	gap: var(--space-1);
 }
 
 .mafia-allies-item {
-	font-size: 0.95rem;
+	font-size: var(--text-lg);
 	color: var(--color-error);
 	font-weight: 600;
 }
@@ -111,7 +111,7 @@
 .mafia-player-grid {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-	gap: 8px;
+	gap: var(--space-3);
 	width: 100%;
 }
 
@@ -119,8 +119,8 @@
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: 6px;
-	padding: 12px 8px;
+	gap: var(--space-2);
+	padding: var(--space-4) var(--space-3);
 	border-radius: var(--radius-md);
 	background: var(--color-surface);
 	border: 2px solid transparent;
@@ -156,7 +156,7 @@
 }
 
 .mafia-player-name {
-	font-size: 0.8rem;
+	font-size: var(--text-md);
 	font-weight: 600;
 	text-align: center;
 	line-height: 1.2;
@@ -166,13 +166,13 @@
 .mafia-player-me {
 	color: var(--color-primary);
 	font-weight: 400;
-	font-size: 0.75rem;
+	font-size: var(--text-sm);
 }
 
 /* --- Role badge --- */
 
 .mafia-role-badge {
-	font-size: 0.7rem;
+	font-size: var(--text-xs);
 	font-weight: 700;
 	padding: 2px 6px;
 	border-radius: var(--radius-pill);
@@ -196,7 +196,7 @@
 	position: absolute;
 	top: 4px;
 	right: 4px;
-	font-size: 1rem;
+	font-size: var(--text-lg);
 }
 
 /* --- Vote count --- */
@@ -207,7 +207,7 @@
 	left: 4px;
 	background: var(--color-primary);
 	color: var(--color-primary-text);
-	font-size: 0.7rem;
+	font-size: var(--text-xs);
 	font-weight: 800;
 	width: 20px;
 	height: 20px;
@@ -223,7 +223,7 @@
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: 16px;
+	gap: var(--space-5);
 	width: 100%;
 	text-align: center;
 }
@@ -231,7 +231,7 @@
 /* --- Action done --- */
 
 .mafia-action-done {
-	font-size: 0.9rem;
+	font-size: var(--text-base);
 	color: var(--color-success);
 	font-weight: 600;
 }
@@ -239,7 +239,7 @@
 /* --- Abstain button --- */
 
 .mafia-abstain-btn {
-	margin-top: 8px;
+	margin-top: var(--space-3);
 	background: var(--color-secondary);
 	color: var(--color-text-muted);
 
@@ -251,7 +251,7 @@
 /* --- Night result cards --- */
 
 .mafia-result-card {
-	padding: 20px;
+	padding: var(--space-6);
 	background: var(--color-surface);
 	border-radius: var(--radius-lg);
 	border: 1px solid var(--color-border);
@@ -273,34 +273,34 @@
 }
 
 .mafia-result-text {
-	font-size: 0.95rem;
+	font-size: var(--text-lg);
 	color: var(--color-text-muted);
-	margin-bottom: 8px;
+	margin-bottom: var(--space-3);
 }
 
 .mafia-result-name {
-	font-size: 1.3rem;
+	font-size: var(--text-2xl);
 	font-weight: 800;
 	color: var(--color-text);
 }
 
 .mafia-result-role {
-	font-size: 0.9rem;
+	font-size: var(--text-base);
 	color: var(--color-text-muted);
-	margin-top: 4px;
+	margin-top: var(--space-1);
 }
 
 .mafia-result-icon {
-	font-size: 2rem;
-	margin-top: 12px;
+	font-size: var(--text-4xl);
+	margin-top: var(--space-4);
 }
 
 /* --- Sheriff check result --- */
 
 .mafia-check-result {
-	font-size: 1.1rem;
+	font-size: var(--text-xl);
 	font-weight: 700;
-	margin-top: 8px;
+	margin-top: var(--space-3);
 }
 
 .mafia-check-result--mafia {
@@ -317,14 +317,14 @@
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: 16px;
+	gap: var(--space-5);
 	text-align: center;
 	width: 100%;
-	padding-top: 24px;
+	padding-top: var(--space-7);
 }
 
 .mafia-game-over-title {
-	font-size: 2rem;
+	font-size: var(--text-4xl);
 	font-weight: 900;
 }
 
@@ -337,12 +337,12 @@
 }
 
 .mafia-game-over-team {
-	font-size: 1.1rem;
+	font-size: var(--text-xl);
 	color: var(--color-text-muted);
 }
 
 .mafia-game-over-subtitle {
-	font-size: 0.85rem;
+	font-size: var(--text-base);
 	color: var(--color-text-muted);
 	text-transform: uppercase;
 	letter-spacing: 0.06em;

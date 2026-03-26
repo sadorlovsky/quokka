@@ -3,11 +3,11 @@
 .scoreboard {
 	display: flex;
 	flex-direction: column;
-	gap: 0.5rem;
+	gap: var(--space-3);
 }
 
 .scoreboard-round {
-	font-size: 0.6875rem;
+	font-size: var(--text-xs);
 	font-weight: 700;
 	color: var(--color-text-muted);
 	text-transform: uppercase;
@@ -18,12 +18,12 @@
 .scoreboard-players-list {
 	display: flex;
 	flex-direction: column;
-	gap: 0.375rem;
+	gap: var(--space-2);
 }
 
 .scoreboard-score {
 	font-family: var(--font-mono);
-	font-size: 1.25rem;
+	font-size: var(--text-2xl);
 	font-weight: 700;
 	color: var(--color-primary);
 }
@@ -31,13 +31,13 @@
 .scoreboard-teams {
 	display: flex;
 	flex-direction: column;
-	gap: 0.75rem;
+	gap: var(--space-4);
 }
 
 .scoreboard-team {
 	display: flex;
 	flex-direction: column;
-	gap: 0.25rem;
+	gap: var(--space-1);
 }
 
 .scoreboard-team-header {
@@ -48,13 +48,13 @@
 	background: var(--color-surface-raised);
 	border-radius: var(--radius-sm);
 	font-weight: 700;
-	font-size: 0.875rem;
+	font-size: var(--text-base);
 }
 
 .scoreboard-team-name {
 	text-transform: uppercase;
 	letter-spacing: 0.06em;
-	font-size: 0.6875rem;
+	font-size: var(--text-xs);
 	font-weight: 700;
 	color: var(--color-text-muted);
 }

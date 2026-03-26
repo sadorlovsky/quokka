@@ -2,27 +2,27 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 36px;
-	height: 36px;
+	width: var(--size-md);
+	height: var(--size-md);
 	border-radius: var(--radius-md);
 	border: 1px solid var(--color-border);
 	background: var(--color-surface);
-	color: var(--color-text-secondary);
+	color: var(--color-text-muted);
 	cursor: pointer;
 	transition: all 0.15s ease;
 
 	&:hover {
 		color: var(--color-text);
-		border-color: var(--color-text-secondary);
+		border-color: var(--color-text-muted);
 		background: var(--color-surface-hover);
 	}
 }
 
 .voice-controls {
-	display: flex;
+	display: inline-flex;
 	align-items: center;
-	gap: 6px;
-	padding: 4px;
+	gap: var(--space-2);
+	padding: 0.25rem;
 	border-radius: var(--radius-md);
 	background: var(--color-surface);
 	border: 1px solid var(--color-border);
@@ -31,10 +31,10 @@
 .voice-peers {
 	display: flex;
 	align-items: center;
-	gap: 4px;
-	padding: 0 8px;
+	gap: var(--space-1);
+	padding: 0 0.5rem;
 	color: var(--color-success);
-	font-size: 13px;
+	font-size: var(--text-md);
 	font-weight: 500;
 }
 
@@ -47,12 +47,12 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	width: 28px;
-	height: 28px;
+	width: var(--size-icon);
+	height: var(--size-icon);
 	border-radius: var(--radius-sm);
 	border: none;
 	background: transparent;
-	color: var(--color-text-secondary);
+	color: var(--color-text-muted);
 	cursor: pointer;
 	transition: all 0.15s ease;
 
@@ -63,15 +63,15 @@
 }
 
 .voice-mute-btn--muted {
-	color: var(--color-danger);
+	color: var(--color-error);
 
 	&:hover {
-		color: var(--color-danger);
+		color: var(--color-error);
 	}
 }
 
 .voice-leave-btn {
 	&:hover {
-		color: var(--color-danger);
+		color: var(--color-error);
 	}
 }

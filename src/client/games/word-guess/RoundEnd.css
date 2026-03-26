@@ -4,29 +4,29 @@
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
-	gap: 1rem;
+	gap: var(--space-5);
 	text-align: center;
 }
 
 .round-end h2 {
 	font-weight: 800;
-	font-size: 1.375rem;
+	font-size: var(--text-2xl);
 }
 
 .revealedWord {
-	font-size: 1.125rem;
+	font-size: var(--text-xl);
 	color: var(--color-text-muted);
 }
 
 .revealedWord strong {
 	color: var(--color-text);
-	font-size: 1.5rem;
+	font-size: var(--text-3xl);
 }
 
 .round-summary {
 	display: flex;
-	gap: 1rem;
-	font-size: 1rem;
+	gap: var(--space-5);
+	font-size: var(--text-lg);
 	font-weight: 700;
 }
 
@@ -42,17 +42,17 @@
 	width: 100%;
 	display: flex;
 	flex-direction: column;
-	gap: 0.25rem;
+	gap: var(--space-1);
 }
 
 .round-word-item {
 	display: flex;
 	align-items: center;
-	gap: 0.5rem;
+	gap: var(--space-3);
 	padding: 0.5rem 0.75rem;
 	background: var(--color-surface);
 	border-radius: var(--radius-sm);
-	font-size: 0.875rem;
+	font-size: var(--text-base);
 	font-weight: 500;
 	border-left: 3px solid transparent;
 }
@@ -89,13 +89,13 @@
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	gap: 0.75rem;
+	gap: var(--space-4);
 	width: 100%;
 }
 
 .round-end-timer {
 	font-family: var(--font-mono);
-	font-size: 1.5rem;
+	font-size: var(--text-3xl);
 	font-weight: 700;
 	color: var(--color-primary);
 }
