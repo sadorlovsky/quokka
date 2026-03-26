@@ -402,11 +402,34 @@ export function useVoiceChat() {
 
 				const source = ctx.createMediaStreamSource(rawStream);
 				const destination = ctx.createMediaStreamDestination();
+
+				// Dry/wet mix: blend original (dry) with RNNoise (wet)
+				// to preserve voice naturalness while still suppressing noise.
+				// 0.0 = full RNNoise, 1.0 = no suppression
+				const dryGain = ctx.createGain();
+				const wetGain = ctx.createGain();
+				dryGain.gain.value = 0.15;
+				wetGain.gain.value = 0.85;
+
 				source.connect(rnnoiseNode);
-				rnnoiseNode.connect(destination);
+				rnnoiseNode.connect(wetGain);
+				source.connect(dryGain);
+				wetGain.connect(destination);
+				dryGain.connect(destination);
 
 				processedStreamRef.current = destination.stream;
-				console.log("[voice] RNNoise noise suppression enabled");
+
+				// Mute for 200ms to avoid initial noise burst while pipeline warms up
+				for (const track of destination.stream.getAudioTracks()) {
+					track.enabled = false;
+				}
+				setTimeout(() => {
+					for (const track of destination.stream.getAudioTracks()) {
+						track.enabled = true;
+					}
+				}, 200);
+
+				console.log("[voice] RNNoise noise suppression enabled (dry/wet mix)");
 			} catch (err) {
 				console.warn("[voice] RNNoise setup failed, using raw audio:", err);
 				processedStreamRef.current = rawStream;
