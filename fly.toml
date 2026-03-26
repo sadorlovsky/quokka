@@ -1,4 +1,4 @@
-app = "fishka"
+app = "quokka"
 primary_region = "ams"
 
 [build]
