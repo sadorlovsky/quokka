@@ -19,6 +19,20 @@ const ICE_SERVERS: RTCIceServer[] = [
 	{ urls: "stun:stun1.l.google.com:19302" },
 ];
 
+/**
+ * Patch SDP to force high-quality Opus parameters:
+ * - maxaveragebitrate=128000 (128 kbps instead of default ~32)
+ * - useinbandfec=1 (Forward Error Correction — recover lost packets)
+ * - cbr=1 (Constant Bitrate — less quality "pulsation")
+ * - stereo=0, sprop-stereo=0 (mono — save bandwidth for voice)
+ */
+function patchOpusSdp(sdp: string): string {
+	return sdp.replace(
+		/(a=fmtp:\d+ [^\r\n]+)/g,
+		"$1;maxaveragebitrate=128000;stereo=0;sprop-stereo=0;useinbandfec=1;cbr=1",
+	);
+}
+
 export function useVoiceChat() {
 	const { send, onVoiceEvent, playerId } = useConnection();
 	const [joined, setJoined] = useState(false);
@@ -88,6 +102,17 @@ export function useVoiceChat() {
 				}
 			}
 
+			// Force high bitrate via setParameters (belt-and-suspenders with SDP patching)
+			const audioSender = pc.getSenders().find((s) => s.track?.kind === "audio");
+			if (audioSender) {
+				const params = audioSender.getParameters();
+				if (params.encodings.length === 0) {
+					params.encodings = [{}];
+				}
+				params.encodings[0].maxBitrate = 128_000;
+				audioSender.setParameters(params).catch(console.warn);
+			}
+
 			// Receive remote audio + set up VAD analyser for remote peers
 			pc.ontrack = (e) => {
 				const remoteStream = e.streams[0] ?? null;
@@ -113,7 +138,10 @@ export function useVoiceChat() {
 			// Initiator creates offer
 			if (isInitiator) {
 				pc.createOffer()
-					.then((offer) => pc.setLocalDescription(offer))
+					.then((offer) => {
+						offer.sdp = patchOpusSdp(offer.sdp ?? "");
+						return pc.setLocalDescription(offer);
+					})
 					.then(() => {
 						send({
 							type: "voiceSignal",
@@ -210,7 +238,10 @@ export function useVoiceChat() {
 						const pc = createPeerConnection(fromId, false);
 						pc.setRemoteDescription(new RTCSessionDescription({ type: "offer", sdp: signal.sdp }))
 							.then(() => pc.createAnswer())
-							.then((answer) => pc.setLocalDescription(answer))
+							.then((answer) => {
+								answer.sdp = patchOpusSdp(answer.sdp ?? "");
+								return pc.setLocalDescription(answer);
+							})
 							.then(() => {
 								send({
 									type: "voiceSignal",
@@ -330,6 +361,8 @@ export function useVoiceChat() {
 		try {
 			const rawStream = await navigator.mediaDevices.getUserMedia({
 				audio: {
+					sampleRate: 48000,
+					channelCount: 1,
 					echoCancellation: true,
 					noiseSuppression: false, // Disabled — RNNoise handles this
 					autoGainControl: true,

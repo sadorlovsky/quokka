@@ -12,7 +12,7 @@ export const GAME_META: Record<
 		name: "Шляпа",
 		description:
 			"Объясняйте слова товарищам по команде, не используя однокоренные. Классическая командная игра на время.",
-		players: "4–16",
+		players: "2–8",
 	},
 	tapeworm: {
 		emoji: "🪱",
@@ -26,7 +26,7 @@ export const GAME_META: Record<
 		name: "Крокодил",
 		description:
 			"Покажите загаданное слово жестами, мимикой и движениями — без единого звука. Остальные угадывают.",
-		players: "3–16",
+		players: "2–8",
 	},
 	hangman: {
 		emoji: "💀",
