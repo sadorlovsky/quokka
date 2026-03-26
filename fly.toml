@@ -1,23 +1,23 @@
-app = "quokka"
-primary_region = "ams"
+# fly.toml app configuration file generated for quokka-woa9zg on 2026-03-26T08:01:59Z
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'quokka-woa9zg'
+primary_region = 'ams'
 
 [build]
-
-[env]
-  NODE_ENV = "production"
 
 [http_service]
   internal_port = 3000
   force_https = true
-  auto_stop_machines = "stop"
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
+  processes = ['app']
 
 [[vm]]
-  memory = "512mb"
-  cpu_kind = "shared"
+  memory = '1gb'
+  cpu_kind = 'shared'
   cpus = 1
-
-[mounts]
-  source = "quokka_data"
-  destination = "/app/data"
+  memory_mb = 256
