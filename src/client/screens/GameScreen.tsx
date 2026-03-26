@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { GAME_META } from "@/shared/games";
 import type { PlayerInfo } from "@/shared/types/room";
 import { PlayerChip } from "../components/PlayerChip";
+import { RoomCodeButton } from "../components/RoomCodeButton";
 import { VoiceControls } from "../components/VoiceControls";
 import { useConnection } from "../contexts/ConnectionContext";
 import { CrocodileGame } from "../games/crocodile/CrocodileGame";
@@ -85,29 +87,52 @@ export function GameScreen() {
 
 	const isHost = room.hostId === playerId;
 	const canEndGame = isHost && room.status === "playing";
+	const gameMeta = GAME_META[room.settings.gameId];
 
 	return (
 		<div className="screen game-screen">
-			<div className="game-header">
-				<div className="game-header-actions">
+			<div className="game-topbar">
+				<div className="game-topbar-left">
+					<button type="button" className="game-back" onClick={() => send({ type: "leaveRoom" })}>
+						<svg
+							width="16"
+							height="16"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2.5"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							<title>Выйти</title>
+							<path d="M19 12H5" />
+							<path d="M12 19l-7-7 7-7" />
+						</svg>
+						<span>Выйти</span>
+					</button>
 					{canEndGame && (
 						<button
-							className="btn btn-secondary game-header-btn"
+							type="button"
+							className="game-end-btn"
 							onClick={() => send({ type: "endGame" })}
 						>
-							Закончить игру
+							Закончить
 						</button>
 					)}
-					<button
-						className="btn btn-secondary game-header-btn"
-						onClick={() => send({ type: "leaveRoom" })}
-					>
-						Выйти
-					</button>
 				</div>
-				<div className="game-header-right">
+
+				{gameMeta && (
+					<div className="game-hero">
+						<span className="game-hero-title">Fishka</span>
+						<span className="game-hero-separator">&middot;</span>
+						<span className="game-hero-emoji">{gameMeta.emoji}</span>
+						<span className="game-hero-name">{gameMeta.name}</span>
+					</div>
+				)}
+
+				<div className="game-topbar-right">
 					<VoiceControls />
-					<span className="room-code-small">{room.code}</span>
+					<RoomCodeButton code={room.code} />
 				</div>
 			</div>
 			{room.settings.gameId === "word-guess" ? (

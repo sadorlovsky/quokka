@@ -122,3 +122,20 @@
 	flex: 1;
 	min-width: 120px;
 }
+
+/* =============================================
+   Desktop: scoreboard sidebar + game content
+   ============================================= */
+
+@media (min-width: 1024px) {
+	.word-guess {
+		display: grid;
+		grid-template-columns: 240px 1fr;
+		gap: 2rem;
+		align-items: start;
+	}
+
+	.word-guess--fullscreen {
+		display: flex;
+	}
+}

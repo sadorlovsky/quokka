@@ -1,4 +1,3 @@
-import { useCallback, useState } from "react";
 import { getRecommendedSettings } from "@/shared/game-settings";
 import { GAME_META } from "@/shared/games";
 import { DEFAULT_CROCODILE_CONFIG } from "@/shared/types/crocodile";
@@ -11,6 +10,7 @@ import { DEFAULT_WORD_GUESS_CONFIG } from "@/shared/types/word-guess";
 import { GameSettings } from "../components/GameSettings";
 import { LobbyChat } from "../components/LobbyChat";
 import { PlayerRoster } from "../components/PlayerRoster";
+import { RoomCodeButton } from "../components/RoomCodeButton";
 import { VoiceControls } from "../components/VoiceControls";
 import { useConnection } from "../contexts/ConnectionContext";
 import { useVoice, VoiceProvider } from "../contexts/VoiceContext";
@@ -27,29 +27,6 @@ export function LobbyScreen() {
 function LobbyScreenInner() {
 	const { room, playerId, send } = useConnection();
 	const { speakingPeerIds, serverSpeakingPeerIds, muted, peers, joined } = useVoice();
-	const [codeCopied, setCodeCopied] = useState(false);
-
-	const copyFromCode = useCallback(async () => {
-		if (!room) {
-			return;
-		}
-		const url = `${location.origin}/room/${room.code}`;
-		try {
-			await navigator.clipboard.writeText(url);
-		} catch {
-			// Fallback for non-secure contexts (http://, WebView, etc.)
-			const ta = document.createElement("textarea");
-			ta.value = url;
-			ta.style.position = "fixed";
-			ta.style.opacity = "0";
-			document.body.appendChild(ta);
-			ta.select();
-			document.execCommand("copy");
-			document.body.removeChild(ta);
-		}
-		setCodeCopied(true);
-		setTimeout(() => setCodeCopied(false), 2000);
-	}, [room]);
 
 	if (!room) {
 		return null;
@@ -191,49 +168,7 @@ function LobbyScreenInner() {
 				</div>
 
 				<div className="lobby-topbar-right">
-					<button
-						type="button"
-						className={`lobby-room-code${codeCopied ? " lobby-room-code--copied" : ""}`}
-						onClick={copyFromCode}
-						title="Нажмите, чтобы скопировать ссылку"
-					>
-						{/* Always render code so button width stays stable */}
-						<span className="lobby-room-code-default" aria-hidden={codeCopied}>
-							<span className="lobby-room-code-value">{room.code}</span>
-							<svg
-								width="14"
-								height="14"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="2"
-								strokeLinecap="round"
-								strokeLinejoin="round"
-							>
-								<title>Скопировать</title>
-								<rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-								<path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-							</svg>
-						</span>
-						{codeCopied && (
-							<span className="lobby-room-code-copied-overlay">
-								<svg
-									width="14"
-									height="14"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="2.5"
-									strokeLinecap="round"
-									strokeLinejoin="round"
-								>
-									<title>Скопировано</title>
-									<path d="M20 6L9 17l-5-5" />
-								</svg>
-								<span className="lobby-room-code-toast">Скопировано</span>
-							</span>
-						)}
-					</button>
+					<RoomCodeButton code={room.code} />
 				</div>
 			</div>
 

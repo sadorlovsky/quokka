@@ -476,3 +476,45 @@
 	font-weight: 700;
 	color: var(--color-warning, #f59e0b);
 }
+
+/* =============================================
+   Column wrappers (transparent on mobile)
+   ============================================= */
+
+.perudo-col-players,
+.perudo-col-main,
+.perudo-col-history {
+	display: contents;
+}
+
+/* =============================================
+   Desktop: 3-column layout
+   ============================================= */
+
+@media (min-width: 1024px) {
+	.perudo--playing {
+		display: grid;
+		grid-template-columns: 200px 1fr 240px;
+		gap: 2rem;
+		align-items: start;
+	}
+
+	.perudo-col-players,
+	.perudo-col-main,
+	.perudo-col-history {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-4);
+	}
+
+	.perudo-players {
+		flex-direction: column;
+		overflow-x: visible;
+	}
+
+	.perudo-bid-history {
+		position: sticky;
+		top: 1rem;
+		max-height: none;
+	}
+}

@@ -58,3 +58,14 @@
 	font-weight: 700;
 	color: var(--color-text-muted);
 }
+
+/* =============================================
+   Desktop: sticky sidebar
+   ============================================= */
+
+@media (min-width: 1024px) {
+	.scoreboard {
+		position: sticky;
+		top: 1rem;
+	}
+}

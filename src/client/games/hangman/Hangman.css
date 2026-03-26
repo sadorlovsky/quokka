@@ -361,3 +361,29 @@
 	font-size: var(--text-base);
 	color: var(--color-text-muted);
 }
+
+/* =============================================
+   Desktop: scoreboard sidebar + game content
+   ============================================= */
+
+@media (min-width: 1024px) {
+	.hangman {
+		display: grid;
+		grid-template-columns: 240px 1fr;
+		gap: 2rem;
+		align-items: start;
+	}
+
+	.hangman--fullscreen {
+		display: flex;
+	}
+
+	.hangman-scoreboard {
+		position: sticky;
+		top: 1rem;
+	}
+
+	.hangman-keyboard {
+		max-width: 600px;
+	}
+}

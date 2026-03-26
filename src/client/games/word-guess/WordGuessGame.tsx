@@ -24,7 +24,7 @@ export function WordGuessGame() {
 
 	if (state.phase === "starting") {
 		return (
-			<div className="word-guess">
+			<div className="word-guess word-guess--fullscreen">
 				<StartingOverlay state={state} />
 			</div>
 		);
@@ -32,7 +32,7 @@ export function WordGuessGame() {
 
 	if (state.phase === "gameOver") {
 		return (
-			<div className="word-guess">
+			<div className="word-guess word-guess--fullscreen">
 				<GameOver
 					state={state}
 					currentPlayerId={playerId}

@@ -649,3 +649,13 @@
 .tapeworm-cut-target:active {
 	transform: scale(0.9);
 }
+
+/* =============================================
+   Desktop: wider board area
+   ============================================= */
+
+@media (min-width: 1024px) {
+	.tapeworm-hand {
+		justify-content: center;
+	}
+}

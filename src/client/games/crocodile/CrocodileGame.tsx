@@ -24,7 +24,7 @@ export function CrocodileGame() {
 
 	if (state.phase === "starting") {
 		return (
-			<div className="crocodile">
+			<div className="crocodile crocodile--fullscreen">
 				<StartingOverlay state={state} />
 			</div>
 		);
@@ -32,7 +32,7 @@ export function CrocodileGame() {
 
 	if (state.phase === "gameOver") {
 		return (
-			<div className="crocodile">
+			<div className="crocodile crocodile--fullscreen">
 				<GameOver
 					state={state}
 					currentPlayerId={playerId}

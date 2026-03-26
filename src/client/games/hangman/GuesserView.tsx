@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import type { HangmanPlayerView } from "@/shared/types/hangman";
 import { HangmanFigure } from "./HangmanFigure";
 import { Keyboard } from "./Keyboard";
-import { ScoreBoard } from "./ScoreBoard";
 import { WordGuessInput } from "./WordGuessInput";
 
 interface GuesserViewProps {
@@ -29,8 +28,6 @@ export function GuesserView({ state, dispatch, currentPlayerId }: GuesserViewPro
 			<p className="hangman-round-info">
 				Раунд {state.currentRound} из {state.totalRounds}
 			</p>
-
-			<ScoreBoard state={state} currentPlayerId={currentPlayerId} />
 
 			<div className="hangman-play-top">
 				<HangmanFigure wrongCount={state.wrongCount} />

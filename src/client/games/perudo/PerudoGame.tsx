@@ -94,35 +94,42 @@ export function PerudoGame() {
 	const currentPlayer = state.players.find((p) => p.id === state.currentPlayerId);
 
 	return (
-		<div className="perudo">
-			<PlayerList state={state} currentPlayerId={playerId} />
+		<div className="perudo perudo--playing">
+			<aside className="perudo-col-players">
+				<PlayerList state={state} currentPlayerId={playerId} />
+			</aside>
 
-			{state.isPalificoRound && (
-				<div className="perudo-palifico-banner">Палифико! Единицы не джокеры</div>
-			)}
+			<div className="perudo-col-main">
+				{state.isPalificoRound && (
+					<div className="perudo-palifico-banner">Палифико! Единицы не джокеры</div>
+				)}
 
-			<DiceArea dice={state.myDice} />
+				<DiceArea dice={state.myDice} />
 
-			{state.currentBid && (
-				<div className="perudo-current-bid">
-					<span>Текущая ставка:</span>
-					<span className="perudo-current-bid-value">
-						{state.currentBid.quantity} x <DiceFace value={state.currentBid.faceValue} size={22} />
-					</span>
-				</div>
-			)}
+				{state.currentBid && (
+					<div className="perudo-current-bid">
+						<span>Текущая ставка:</span>
+						<span className="perudo-current-bid-value">
+							{state.currentBid.quantity} x{" "}
+							<DiceFace value={state.currentBid.faceValue} size={22} />
+						</span>
+					</div>
+				)}
 
-			<BidHistory bids={state.bidHistory} players={state.players} />
+				<Timer timerEndsAt={state.timerEndsAt} />
 
-			<Timer timerEndsAt={state.timerEndsAt} />
+				{state.isMyTurn ? (
+					<BidControls state={state} dispatch={dispatch} />
+				) : (
+					<div className="perudo-waiting">
+						<span>Ход: {currentPlayer?.name ?? "..."}</span>
+					</div>
+				)}
+			</div>
 
-			{state.isMyTurn ? (
-				<BidControls state={state} dispatch={dispatch} />
-			) : (
-				<div className="perudo-waiting">
-					<span>Ход: {currentPlayer?.name ?? "..."}</span>
-				</div>
-			)}
+			<aside className="perudo-col-history">
+				<BidHistory bids={state.bidHistory} players={state.players} />
+			</aside>
 		</div>
 	);
 }

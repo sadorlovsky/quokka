@@ -347,3 +347,17 @@
 	text-transform: uppercase;
 	letter-spacing: 0.06em;
 }
+
+/* =============================================
+   Desktop: wider layout
+   ============================================= */
+
+@media (min-width: 1024px) {
+	.mafia {
+		max-width: 720px;
+	}
+
+	.mafia-player-grid {
+		grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+	}
+}
