@@ -154,9 +154,9 @@ export function LobbyScreen() {
 				</button>
 
 				<div className="lobby-hero">
-					<span className="lobby-hero-emoji">{gameMeta?.emoji}</span>
 					<span className="lobby-hero-title">Fishka</span>
 					<span className="lobby-hero-separator">·</span>
+					<span className="lobby-hero-emoji">{gameMeta?.emoji}</span>
 					<span className="lobby-hero-name">{gameMeta?.name}</span>
 				</div>
 
@@ -166,8 +166,26 @@ export function LobbyScreen() {
 					onClick={copyFromCode}
 					title="Нажмите, чтобы скопировать ссылку"
 				>
-					{codeCopied ? (
-						<>
+					{/* Always render code so button width stays stable */}
+					<span className="lobby-room-code-default" aria-hidden={codeCopied}>
+						<span className="lobby-room-code-value">{room.code}</span>
+						<svg
+							width="14"
+							height="14"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							<title>Скопировать</title>
+							<rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+							<path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+						</svg>
+					</span>
+					{codeCopied && (
+						<span className="lobby-room-code-copied-overlay">
 							<svg
 								width="14"
 								height="14"
@@ -182,25 +200,7 @@ export function LobbyScreen() {
 								<path d="M20 6L9 17l-5-5" />
 							</svg>
 							<span className="lobby-room-code-toast">Скопировано</span>
-						</>
-					) : (
-						<>
-							<span className="lobby-room-code-value">{room.code}</span>
-							<svg
-								width="14"
-								height="14"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="2"
-								strokeLinecap="round"
-								strokeLinejoin="round"
-							>
-								<title>Скопировать</title>
-								<rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-								<path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-							</svg>
-						</>
+						</span>
 					)}
 				</button>
 			</div>
