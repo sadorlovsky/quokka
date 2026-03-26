@@ -22,15 +22,21 @@ const ICE_SERVERS: RTCIceServer[] = [
 /**
  * Patch SDP to force high-quality Opus parameters:
  * - maxaveragebitrate=128000 (128 kbps instead of default ~32)
+ * - maxplaybackrate=48000 (full bandwidth, not narrowband)
  * - useinbandfec=1 (Forward Error Correction — recover lost packets)
+ * - usedtx=0 (disable Discontinuous Transmission — no silence clipping)
  * - cbr=1 (Constant Bitrate — less quality "pulsation")
  * - stereo=0, sprop-stereo=0 (mono — save bandwidth for voice)
+ * - ptime=20 (20ms frames — good balance of latency vs efficiency)
  */
 function patchOpusSdp(sdp: string): string {
-	return sdp.replace(
+	let patched = sdp.replace(
 		/(a=fmtp:\d+ [^\r\n]+)/g,
-		"$1;maxaveragebitrate=128000;stereo=0;sprop-stereo=0;useinbandfec=1;cbr=1",
+		"$1;maxaveragebitrate=128000;maxplaybackrate=48000;stereo=0;sprop-stereo=0;useinbandfec=1;usedtx=0;cbr=1",
 	);
+	// Set ptime=20 (20ms audio frames)
+	patched = patched.replace(/(a=rtpmap:\d+ opus\/48000\/2)/g, "$1\r\na=ptime:20");
+	return patched;
 }
 
 export function useVoiceChat() {
@@ -110,6 +116,8 @@ export function useVoiceChat() {
 					params.encodings = [{}];
 				}
 				params.encodings[0].maxBitrate = 128_000;
+				params.encodings[0].networkPriority = "high" as RTCPriorityType;
+				params.encodings[0].priority = "high" as RTCPriorityType;
 				audioSender.setParameters(params).catch(console.warn);
 			}
 
@@ -363,6 +371,7 @@ export function useVoiceChat() {
 				audio: {
 					sampleRate: 48000,
 					channelCount: 1,
+					latency: { ideal: 0.01 },
 					echoCancellation: true,
 					noiseSuppression: false, // Disabled — RNNoise handles this
 					autoGainControl: true,
