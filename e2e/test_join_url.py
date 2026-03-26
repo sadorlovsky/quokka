@@ -20,4 +20,4 @@ def test_invalid_room_code_stays_home(page):
 
     # Should end up on home screen (invalid room)
     page.wait_for_selector(".home-title")
-    expect(page.locator(".home-title")).to_have_text("Fishka")
+    expect(page.locator(".home-title")).to_have_text("Квокка")

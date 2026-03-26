@@ -1,4 +1,4 @@
-app = "fishka"
+app = "quokka"
 primary_region = "ams"
 
 [build]
@@ -19,5 +19,5 @@ primary_region = "ams"
   cpus = 1
 
 [mounts]
-  source = "fishka_data"
+  source = "quokka_data"
   destination = "/app/data"

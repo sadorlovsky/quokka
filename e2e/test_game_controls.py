@@ -26,7 +26,7 @@ def test_player_can_leave_active_game(page, second_page):
 
     expect(page.locator(".room-code-value")).to_have_text(code)
     expect(page.locator(".player-list-item")).to_have_count(1)
-    expect(second_page.locator(".home-title")).to_have_text("Fishka")
+    expect(second_page.locator(".home-title")).to_have_text("Квокка")
 
 
 def test_host_can_end_active_game(page, second_page):

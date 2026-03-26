@@ -4,7 +4,7 @@ from playwright.sync_api import expect
 
 
 def test_home_page_loads(page):
-    expect(page.locator(".home-title")).to_have_text("Fishka")
+    expect(page.locator(".home-title")).to_have_text("Квокка")
     expect(page.locator(".home-subtitle")).to_be_visible()
 
 

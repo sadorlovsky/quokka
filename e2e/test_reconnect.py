@@ -40,4 +40,4 @@ def test_cleared_session_goes_home(page):
     page.goto("/")
     page.wait_for_selector(".home-title")
 
-    expect(page.locator(".home-title")).to_have_text("Fishka")
+    expect(page.locator(".home-title")).to_have_text("Квокка")
